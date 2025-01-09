@@ -1,0 +1,235 @@
+﻿@using SUAP_PortalOficios.Views.Shared.Components
+@model SUAP_PortalOficios.Models.Oficios
+
+@{
+    ViewData["Title"] = "Detalles";
+}
+<div class="wrapper h-100">
+    <div class="pane center px-2" style="">
+        <div class="d-sm-flex justify-content-between">
+            <h1>Detalle</h1>               
+        </div>        
+        <div class="mb-3">
+            <hr class="my-1" />
+            <div class="d-flex flex-wrap gap-3 justify-content-between text-capitalize" >
+                <div>
+                    <label class="text-decoration-underline">
+                        Fecha de Ingreso:
+                    </label>
+                    <span class="fw-bold">
+                        @(Model.FechaIngreso.ToString("dd/MM/yy HH:mm") + " hs.")
+                    </span>
+                </div>              
+                <div>
+                    <label class="text-decoration-underline">
+                        SAC:
+                    </label>
+                    <span class="fw-bold">
+                        @Html.DisplayFor(model => model.SAC)
+                    </span>
+                </div>             
+                <div>
+                    <label class="text-decoration-underline">
+                        Plazo:
+                    </label>
+                    <span class = "fw-bold">
+                        @(Model.Plazo?.PlazoName ?? "Ninguno")
+                    </span>
+                </div>
+            </div>
+            <div class=" d-flex flex-wrap gap-3 justify-content-between text-capitalize" >
+                <div class="">
+                    <label class="text-decoration-underline">
+                        Tribunal:
+                    </label>
+                    <span class="fw-bold">
+                        @ViewBag.Tribunal.Descripcion
+                    </span>
+                </div>                
+
+            </div>
+            <div class=" d-flex flex-wrap gap-3 justify-content-between text-capitalize" >
+                <div>
+                    <label class="text-decoration-underline">
+                        A Cargo:
+                    </label>
+                    <span class="fw-bold">
+                        @Html.DisplayFor(model => model.Scope.ScopeName)
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        Tipo:
+                    </label>
+                    <span class="fw-bold">
+                        @Html.DisplayFor(model => model.TipoOficio.TipoOficioNombre)
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        Estado:
+                    </label>
+                    <span class="fw-bold">
+                        @Html.DisplayFor(model => model.Estado.EstadoNombre)
+                    </span>
+                </div>
+            </div> 
+        </div>
+        <div>
+            @if (ViewBag.Interno != null)
+            {
+                <div class="border border-2 bg-light px-3 py-1">
+                    <div class="d-sm-flex justify-content-between ">
+                        <h4>Interno: </h4>                  
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div><label>Legajo:</label> <span class="fw-bold">@ViewBag.Interno.Legajo</span></div>
+                        @if (ViewBag.Interno.EnLibertad == 2)
+                        {
+                            <label class="fw-bold">(EN LIBERTAD)</label>
+                        }
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label>Apellido:</label> <span class="fw-bold">@ViewBag.Interno.Apellido</span>
+                        </div>
+                        <div>
+                            <label>Nombres:</label> <span class="fw-bold">@ViewBag.Interno.Nombre</span>
+                        </div>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label>Tipo de Detención:</label> <span class="fw-bold">@ViewBag.Interno.TipoDetencion</span>
+                        </div>
+                        <div>
+                            <label class=" form-check-label">Art. 11:</label>
+                            <input disabled type="checkbox" @(ViewBag.Interno.Art11.ToString() == "1" ? "checked" : "") />
+                        </div>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label>Alojamiento Actual:</label> <span class="fw-bold">@ViewBag.Interno.Establecimiento</span>
+                        </div>
+                        <div>
+                            <label>Pabellón:</label> <span class="fw-bold">@ViewBag.Interno.Pabellon</span>
+                        </div>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <label>Tribunales:</label> <span class="fw-bold">@ViewBag.Interno.Tribunales</span>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label>Fase:</label> <span class="fw-bold">@ViewBag.Interno.Fase</span>
+                        </div>
+                        <div>
+                            <label>Concepto:</label> <span class="fw-bold">@ViewBag.Interno.Concepto</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>        
+        <div class=" my-2 ">
+            <component type="@typeof(Observations)" render-mode="Server" param-OficioId="@Model?.IdOficio" />
+        </div>
+        <div>                
+            <component type="@typeof(ListSections)" render-mode="Server"
+            param-AreaXOficio="@ViewBag.Areas as List<Oficios_x_Area>" 
+            param-Devolucion="@ViewBag.DeletePermission" 
+            />
+        </div>
+        <div class="d-sm-flex justify-content-between mt-2">
+
+            <div class="mt-3">
+                <a class="btn " href="javascript:history.back()"> <span class="fa fa-arrow-left me-3"></span>Volver</a> |
+                <a class="btn " href="oficios/derivar/@Model.IdOficio.ToString()"> <span class="fa fa-edit me-3"></span>Modificar</a> |
+                @* <a href="api/Document/Download/@Model.IdOficio.ToString()">Descargar</a> | *@
+                <a class="btn text-danger" href="oficios/Delete/@Model.IdOficio.ToString()"><span class="fa fa-xmark me-3"></span>Eliminar Oficio</a>
+            </div>
+            <div>               
+                @if (Model.EliminadoLogico == true)
+                {
+                    <form method="post" action="/oficios/restore/@Model.IdOficio" onsubmit="return confirmAction(this, '¿Está seguro de restaurar el oficio con ID @Model.IdOficio?')">
+
+                        <button type="submit" class="btn btn-success">Restaurar</button>
+                    </form>
+                }
+                else if (Model.IdEstado == 4 || Model.IdEstado == 3)
+                {
+                    
+                        @if (Model.IdTipoOficio == 2)
+                        {
+                        <form method="post" action="/oficios/paraControl" onsubmit="return confirmAction(this, '¿Está seguro de marcar este oficio como Tomado Conocimiento?')">
+                            <input type="hidden" name="oficioId" value="@Model.IdOficio" />
+                            <button type="submit" class="btn btn-primary">Tomado Conocimiento</button>
+                        </form>
+                        }
+                        else if (Model.IdTipoOficio == 1)
+                        {
+                        <form method="post" action="/oficios/paraControl" onsubmit="return confirmAction(this, '¿Está seguro de marcar este oficio como Respuesta Entregada?')">
+                            <input type="hidden" name="oficioId" value="@Model.IdOficio" />
+                            <button type="submit" class="btn btn-success">Enviar Respuesta</button>
+                        </form>
+                        }
+
+                    
+                }
+                else if (Model.IdEstado == 5)
+                {
+                    <form method="post" action="/oficios/Finalizar" onsubmit="return confirmAction(this, '¿Está seguro de finalizar este oficio?')">
+                        <input type="hidden" name="oficioId" value="@Model.IdOficio" />
+                        @if (Model.IdTipoOficio == 2)
+                        {
+                            <button type="submit" class="btn btn-primary">Archivar Toma de Conocimiento</button>
+                        }
+                        else if (Model.IdTipoOficio == 1)
+                        {
+                            <button type="submit" class="btn btn-success">Derivar para su Envío</button>
+                        }
+                    </form>
+                }
+                else if (Model.IdEstado == 6)
+                {
+                    <form method="post" action="/oficios/Enviado" onsubmit="return confirmAction(this, '¿Está seguro de marcar este oficio como Enviado?')">
+                        <input type="hidden" name="oficioId" value="@Model.IdOficio" />
+                        <button type="submit" class="btn btn-success">Respuesta Enviada</button>
+                    </form>
+                }                
+            </div>
+        </div>
+        <div class="mt-2">
+            <span class="text-muted">Ultima Modificacion: @Model?.MyUser?.Nombre</span>
+        </div>
+    </div>
+    <div class="pane wright ps-4 border-start" Style="">
+        <component type="@typeof(PdfViewer)"
+                   param-oficioId="@Model?.IdOficio"
+                   render-mode="Server"
+                   param-DeletePermission="@ViewBag.DeletePermission"
+                   param-AddPermmision="@ViewBag.AddPermission" />
+    </div>
+</div>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<script>
+        async function confirmAction(form, message) {
+        // Prevenimos el envío inmediato del formulario
+        event.preventDefault();
+
+        // Esperamos la respuesta del usuario
+        const userConfirmed = await ShowConfirm('Confirmar acción', message);
+
+        // Si el usuario confirma, enviamos el formulario
+        if (userConfirmed) {
+            form.submit(); // Enviar el formulario
+        }
+    }
+        
+
+</script>
+

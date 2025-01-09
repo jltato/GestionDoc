@@ -1,0 +1,112 @@
+﻿@model IEnumerable<SUAP_PortalOficios.Models.DTOs.OficiosBorradosDTO>
+
+<div class="wrapper">
+    <h2>Oficios Borrados</h2>
+    <h4 class=" text-danger">Los oficios borrados permanceran en este listado por 30 dias</h4>
+    
+    <table id="tabla1" class="table-hover display ">
+        <thead>
+            <tr>
+                <th>
+                    Id
+                </th>
+                <th>
+                    Fecha de Ingreso
+                </th>
+                <th>
+                    Plazo
+                </th>
+                <th>
+                    Legajo
+                </th>
+                <th>
+                    Apellido
+                </th>
+                <th>
+                    Nombre
+                </th>
+                <th>
+                    Tipo
+                </th>
+                <th>
+                    Tribunal
+                </th>
+                <th>
+                    A Cargo
+                </th>
+                <th>
+                    Eliminado
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr onclick="window.location.href='@Url.Action("details", "Oficios", new { id = item.IdOficio })'">
+                    <td>
+                    @Html.DisplayFor(modelItem => item.IdOficio)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FechaIng)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Plazo)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Legajo)
+                </td>
+                <td>
+                        @Html.DisplayFor(modelItem => item.Apellido)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Nombre)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Tipo)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Tribunal)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EstabACargo)
+                </td>
+                <td>
+                    @String.Format("{0:dd/MM/yy hh:mm}", item.Eliminado) 
+                </td>
+                <td>
+                    <a href="oficios/details/@item.IdOficio" style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Restaurar">
+                        <i class="fa fa-arrow-up"></i>
+                    </a>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        var windowHeight = $(window).height();
+        var tableOffsetTop = $('#tabla1').offset().top;
+        var availableHeight = windowHeight - tableOffsetTop - 250;
+
+        var table = new DataTable('#tabla1', {
+            language: {
+                url: '../../lib/DataTables/Language.json',
+            },
+            order: [],
+            lengthMenu: [10, 25, 50, 100, { label: 'Todos', value: -1 }],
+            pageLength: 50,
+            scrollY: availableHeight + "px",
+            responsive: true,
+            processing: true,
+        });
+    });
+</script>

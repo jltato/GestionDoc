@@ -1,0 +1,90 @@
+﻿@model SUAP_PortalOficios.Models.Oficios
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Borrar</h1>
+
+<h3>seguro que deseea borrar?</h3>
+<div>
+    <h4>Oficios</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            ID:
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IdOficio)
+        </dd>
+        <dt class = "col-sm-2">
+            Fecha Ingreso:
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.FechaIngreso)
+        </dd>                       
+        <dt class = "col-sm-2">
+            Tipo:
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.TipoOficio.TipoOficioNombre)
+        </dd>
+        <dt class = "col-sm-2">
+            Estado:
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Estado.EstadoNombre)
+        </dd>       
+        <dt class="col-sm-2">
+            Medio:
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.MedioIng.MedioName)
+        </dd>
+        <dt class="col-sm-2">
+            SAC:
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.SAC)
+        </dd>
+        <dt class="col-sm-2">
+            A cargo:
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Scope.ScopeName)
+        </dd>
+        <dt class="col-sm-2">
+            Legajo Interno:
+        </dt>
+        <dd class="col-sm-10">
+            @if(ViewBag.interno != null)
+            {
+                @ViewBag.interno.Legajo
+            }  
+        </dd>
+        <dt class="col-sm-2">
+            Apellido Interno:
+        </dt>
+        <dd class="col-sm-10">
+            @if (ViewBag.interno != null)
+            {
+                @ViewBag.interno.Apellido
+            }
+        </dd>
+        <dt class="col-sm-2">
+            Nombre Interno:
+        </dt>
+        <dd class="col-sm-10">
+            @if (ViewBag.interno != null)
+            {
+                @ViewBag.interno.Nombre 
+            }
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="IdOficio" />
+        <input type="submit" value="Borrar" class="btn btn-danger" /> |
+        <a type="button" class="btn btn-success" href="@ViewBag.RefererUrl">Volver</a>
+    </form>
+</div>

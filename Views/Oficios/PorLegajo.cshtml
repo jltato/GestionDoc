@@ -1,0 +1,103 @@
+﻿@model IEnumerable<SUAP_PortalOficios.Models.DTOs.OficiosPendientesDTO>
+
+@if (Model.Count() > 0)
+    {
+        <div class="wrapper">
+        <h2>Oficios</h2>
+        <div class="d-flex flex-wrap gap-2 my-3">
+            <label class="fs-3">Legajo:</label><span class="fw-bold fs-3">@Model.FirstOrDefault().Legajo</span>
+            <label class="fs-3">Apellido y Nombre:</label><span class="fw-bold fs-3">@Model.FirstOrDefault().Apellido</span><span class="fw-bold fs-3">@Model.FirstOrDefault().Nombre</span>
+        </div>
+        <table id="tabla1" class="table-hover display">
+            <thead>
+                <tr>
+                    <th>
+                        Id
+                    </th>
+                    <th>
+                        Fecha ingreso
+                    </th>
+                    <th>
+                        plazo
+                    </th>
+                    <th>
+                        Tipo
+                    </th>
+                    <th>
+                        A cargo
+                    </th>
+                    <th>
+                        Estado
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr onclick="window.location.href='@Url.Action("Details", "Oficios", new { id = item.IdOficio })'">
+                        <td>
+                            @Html.DisplayFor(modelItem => item.IdOficio)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.FechaIng)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Plazo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Tipo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.EstabACargo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Estado)
+                        </td>
+                        <td>
+                            <a href="oficios/delete/@item.IdOficio" style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Eliminar">
+                                <i class="fa fa-trash-o"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+    else
+    {
+        <div class=" mb-3">
+            <h3 class="fw-bold"> No existen Oficios relacionados a este legajo...</h3>
+        </div>
+
+           <a href="#" onclick="window.close();">Cerrar</a>
+
+    }
+
+<style>
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+
+    $(document).ready(function () {
+        var windowHeight = $(window).height();
+        var tableOffsetTop = $('#tabla1').offset().top;
+        var availableHeight = windowHeight - tableOffsetTop - 250;
+
+        var table = new DataTable('#tabla1', {
+            language: {
+                url: '../../lib/DataTables/Language.json',
+            },
+            order: [],
+            lengthMenu: [10, 25, 50, 100, { label: 'Todos', value: -1 }],
+            pageLength: 50,
+            scrollY: availableHeight + "px",
+            responsive: true,
+            processing: true,
+        });
+    });
+</script>

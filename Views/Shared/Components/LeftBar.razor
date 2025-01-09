@@ -1,0 +1,582 @@
+﻿@page "/LeftBar"
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Identity
+@using SUAP_PortalOficios.Data
+@using System.Net
+@using SUAP_PortalOficios.Models.DTOs
+@using SUAP_PortalOficios.Views.Shared.Components.Services
+@inject UserManager<MyUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IAntiforgery Antiforgery
+@inject HttpClientService HttpClientService
+@implements IDisposable
+
+<Field Height="Height.Is100">
+    <Bar Mode="@mode"    
+    CollapseMode="BarCollapseMode.Small"
+    Breakpoint="Breakpoint.None"
+    ThemeContrast="ThemeContrast.Light"
+    Class="h-100"
+    id="LeftBar">
+        <button id="botonEscondido1" class="d-none" data-bs-toggle="modal" data-bs-target="#ModalBusquedaLegajo">modal</button>
+        <button id="botonEscondido2" class="d-none" data-bs-toggle="modal" data-bs-target="#ModalBusquedaSac">modal</button>
+        <BarToggler @onclick="Toggler"/>
+        <BarBrand style="display:">
+            <BarItem Class="d-flex">
+                <BarLink To="/home">
+                    <BarIcon IconName="IconName.Compass"  />
+                    Menu
+                </BarLink>               
+            </BarItem>
+        </BarBrand>
+        <BarMenu>
+            <BarStart>  
+                @if (IsCoordinador)
+                {
+                    <BarItem Class="d-flex">
+                        <BarLink To="oficios/UploadPdf">
+                            <BarIcon IconName="IconName.FileUpload"
+                                     data-bs-toggle="@(mode == BarMode.VerticalSmall ? "tooltip" : null)"
+                                     data-bs-title="@(mode == BarMode.VerticalSmall ? "Carga de Archivos" : null)" />
+                            Carga de Archivos
+                        </BarLink>
+                    </BarItem>
+                    @if (mode == BarMode.VerticalSmall)
+                    {
+                        <BarItem Class="d-flex">
+                            <BarLink To="Oficios/Borradores" Class="col-12">
+                                <BarIcon IconName="IconName.FilePdf" Class="ms-2" data-bs-toggle="tooltip" data-bs-title="Borradores" />
+                                Borradores
+                            </BarLink>
+                            <span class="top-0 start-100 translate-middle badge rounded-pill h-50
+                            @(Borrador > 0 ? "bg-primary" : "")">
+                                @(Borrador > 0 ? Borrador : "")
+                            </span>
+                        </BarItem>
+                    }
+                    else
+                    {
+                        <BarItem Class="d-flex">
+                            <BarLink To="Oficios/Borradores" Class="">
+                                <BarIcon IconName="IconName.FilePdf" />
+                                Borradores
+                                <span class="align-self-center me-2 float-end @(Borrador > 0 ? "text-danger fw-bolder" : "")">
+                                    @Borrador
+                                </span>
+                            </BarLink>
+                        </BarItem>
+                    }
+                }
+                @if (IsAsesor || IsCoordinador)
+                {
+                    <BarItem Class="d-flex">   
+                        @if (mode == BarMode.VerticalSmall){
+                            <BarLink To="Oficios/SinDerivar" Class="col-12">
+                                <BarIcon IconName="IconName.Mail" data-bs-toggle="tooltip" data-bs-title="Para Derivar"></BarIcon>
+                                Para Derivar                          
+                            </BarLink>
+                            <span class="top-0 start-100 translate-middle badge rounded-pill h-50
+                                @(IsAsesor ? (Sin_Derivar > 0 ? "bg-danger" : ""):"")">
+                                @(IsAsesor ? (Sin_Derivar > 0 ? Sin_Derivar : "") : "")
+                            </span>
+                        }
+                        else
+                        {
+                            <BarLink To="Oficios/SinDerivar" Class="">
+                                <BarIcon IconName="IconName.Mail" />
+                                Para Derivar
+                                <span class="align-self-center me-2 float-end @(Sin_Derivar > 0? "text-danger fw-bolder" : "")">
+                                    @Sin_Derivar
+                                </span>
+                            </BarLink>
+                        }
+                    </BarItem> 
+                }   
+                else
+                {
+                    <BarItem Class="d-flex">
+                        @if (mode == BarMode.VerticalSmall)
+                        {
+                            <BarLink To="Oficios/Index/Nuevos" Class="col-12">
+                                <BarIcon IconName="IconName.Mail" data-bs-toggle="tooltip" data-bs-title="Nuevos"></BarIcon>
+                                Nuevos
+                            </BarLink>
+                            <span class="top-0 start-100 translate-middle badge rounded-pill h-50
+                            @(Nuevo > 0 ? "bg-danger" : "")">
+                                @(Nuevo > 0 ? Nuevo : "")
+                            </span>
+                        }
+                        else
+                        {
+                            <BarLink To="Oficios/Index/Nuevos" Class="">
+                                <BarIcon IconName="IconName.Mail" />
+                                Nuevos
+                                <span class="align-self-center me-2 float-end @(Nuevo > 0? "text-danger fw-bolder" : "")">
+                                    @Nuevo 
+                                </span>
+                            </BarLink>
+                        }
+                    </BarItem>
+                }
+                <BarItem Class="d-flex">                  
+                    @if (mode == BarMode.VerticalSmall)
+                    {
+                        <BarLink To="Oficios/Index/Pendientes" Class="col-12">
+                            <BarIcon IconName="IconName.MailOpen" data-bs-toggle="tooltip" data-bs-title="Pendientes"></BarIcon>
+                            Pendientes
+                        </BarLink>                        
+                    }
+                    else
+                    {
+                        <BarLink To="Oficios/Index/Pendientes" Class="">
+                            <BarIcon IconName="IconName.MailOpen" />
+                            Pendientes
+                            <span class="align-self-center me-2 float-end">
+                                @(IsAsesor || IsCoordinador ? (Pendiente + Nuevo) : Pendiente) 
+                            </span>
+                        </BarLink>
+                    }
+                </BarItem>
+                @if (IsAsesor || IsCoordinador){
+                    <BarItem Class="d-flex">
+                        @if (mode == BarMode.VerticalSmall)
+                        {
+                            <BarItem Class="d-flex">
+                                <BarLink To="Oficios/Index/Para-Control" Class="col-12">
+                                    <BarIcon IconName="IconName.Eye" Class="ms-2" data-bs-toggle="tooltip" data-bs-title="Para Controlar" />
+                                    Para Control
+                                </BarLink>
+                                <span class="top-0 start-100 translate-middle badge rounded-pill h-50
+                            @(IsAsesor ? (Para_Control > 0 ? "bg-danger" : "") : "")">
+                                    @(IsAsesor ? (Para_Control > 0 ? Para_Control : "") : "")
+                                </span>
+                            </BarItem>
+                        }
+                        else
+                        {
+                            <BarItem Class="d-flex">
+                                <BarLink To="Oficios/Index/Para-Control" Class="">
+                                    <BarIcon IconName="IconName.Eye" />
+                                    Para Control
+                                    <span class="align-self-center me-2 float-end @(Para_Control > 0? "text-danger fw-bolder" : "")">
+                                        @Para_Control
+                                    </span>
+                                </BarLink>
+                            </BarItem>
+                        }
+                    </BarItem>
+                }
+                @if (IsCoordinador)
+                {
+                    <BarItem Class="d-flex">
+                        @if (mode == BarMode.VerticalSmall)
+                        {
+                            <BarLink To="Oficios/Index/Para-Enviar"  Class="col-12">
+                                <BarIcon IconName="IconName.Send" data-bs-toggle="tooltip" data-bs-title="Para Enviar"></BarIcon>
+                                Para Enviar
+                            </BarLink>
+                            <span class="top-0 start-100 translate-middle badge rounded-pill h-50
+                            @(Finalizado > 0 ? "bg-danger" : "")">
+                                @(Finalizado > 0 ? Finalizado : "")
+                            </span>
+                        }
+                        else
+                        {
+                            <BarLink To="Oficios/Index/Para-Enviar" Class="">
+                                <BarIcon IconName="IconName.Send" />
+                                Para Enviar
+                                <span class="align-self-center me-2 float-end @(Finalizado > 0? "text-danger fw-bolder" : "")">
+                                    @Finalizado
+                                </span>
+                            </BarLink>
+                        }
+                    </BarItem>
+                }
+                <BarItem Class="d-flex">
+                    <BarLink To="Oficios/Index/Archivados">
+                        <BarIcon IconName="IconName.Archive"
+                                 data-bs-toggle="@(mode == BarMode.VerticalSmall ? "tooltip" : null)"
+                                 data-bs-title="@(mode == BarMode.VerticalSmall ? "Archivados" : null)" 
+                                 />
+                        Archivados
+                    </BarLink>
+                </BarItem>
+                <BarItem Class="d-flex">
+                    <BarLink To="Oficios/deleted">
+                        <BarIcon IconName="IconName.Delete" 
+                                     data-bs-toggle="@(mode == BarMode.VerticalSmall ? "tooltip" : null)"
+                                     data-bs-title="@(mode == BarMode.VerticalSmall ? "Borrados" : null)" 
+                                     />
+                        Borrados
+                    </BarLink>
+                </BarItem>
+
+                <BarItem Class="">
+
+                    <BarDropdown Class="">
+                        <BarDropdownToggle>
+                            <BarIcon IconName="IconName.Search"
+                                     data-bs-toggle="@(mode == BarMode.VerticalSmall ? "tooltip" : null)"
+                                     data-bs-title="@(mode == BarMode.VerticalSmall ? "Busqueda" : null)" 
+                                     />
+                            Busqueda
+                        </BarDropdownToggle>                      
+                        <BarDropdownMenu>
+                            <BarDropdownItem href="#" onclick="@BuscarLegajo">Buscar por Legajo</BarDropdownItem>
+                            <BarDropdownItem href="#" onclick="@BuscarSac">Buscar por SAC</BarDropdownItem>
+                        </BarDropdownMenu>                                             
+                    </BarDropdown>
+                </BarItem>
+            </BarStart>
+        </BarMenu>
+
+        <!-- Modal -->
+        <div class="modal fade" id="ModalBusquedaLegajo" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+            <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable modal-fullscreen-md-down">
+                <div class="modal-content">
+                    <div class="d-flex justify-content-end">
+                        <button id="cerrar1" type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-header align-self-center">
+                        <h4>Buscar oficios por Interno</h4>
+                    </div>
+                    <div Class="modal-body">
+                        <Form id="busquedaLegajo" Class="d-flex flex-column justify-content-center" onsubmit="@HandleSubmitLegajo">
+                            <div class="d-flex justify-content-center gap-2 mb-2">
+                                <label class="align-self-center">Legajo:</label>
+                                <input class="form-control text-center" type="text" @bind-value="legajo" maxlength="6"  oninput="this.value = this.value.replace(/[^0-9], '')"/>
+                            </div>
+                            <button type="submit" class="btn btn-secondary">Buscar</button>
+                        </Form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="ModalBusquedaSac" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+            <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable modal-fullscreen-md-down">
+                <div class="modal-content">
+                    <div class="d-flex justify-content-end">
+                        <button id="cerrar2" type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-header align-self-center">
+                        <h4>Buscar oficios por SAC</h4>
+                    </div>
+                    <div Class="modal-body">
+                        <Form id="busquedaSac" Class="d-flex flex-column justify-content-center" onsubmit="@HandleSubmitSac">
+                            <div class="d-flex justify-content-center gap-2 mb-2">
+                                <label class="align-self-center">SAC:</label>
+                                <input class="form-control text-center" type="text" @bind="Sac"/>
+                            </div>
+                            <button type="submit" class="btn btn-secondary">Buscar</button>
+                        </Form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Bar>
+</Field>
+
+
+@code {
+    private bool IsCoordinador = false;
+    private bool IsAsesor = false; 
+    private BarMode mode = BarMode.VerticalInline;
+    private Dictionary<string, int> cantidades = new Dictionary<string, int>();
+    private DotNetObjectReference<LeftBar>? objRef;
+    private int Borrador ;
+    private int Sin_Derivar;
+    private int Nuevo;
+    private int Pendiente;
+    private int Para_Control;
+    private int Finalizado ;
+    private int Archivado;
+    private string legajo="";
+    private string Sac="";
+    private int screenWidth;
+    private string visible;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var User = await UserManager.GetUserAsync(authState.User);
+
+        if (User != null)
+        {
+            var roles = await UserManager.GetRolesAsync(User);
+            foreach (string role in roles)
+            {                
+                if(role == "Asesor")
+                {
+                    IsAsesor = true;
+                }
+                if ( role == "Coordinador")
+                {
+
+                    IsCoordinador = true;
+                }
+            }
+        }
+
+
+        await ObtenerCantidadesAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+
+            await JS.InvokeVoidAsync("registerSideBarInstance", objRef);
+
+            await JS.InvokeVoidAsync("adjustTable");
+
+            screenWidth = await JS.InvokeAsync<int>("getScreenWidth");
+
+            await JS.InvokeVoidAsync("subscribeToResize", objRef);
+
+            await JS.InvokeVoidAsync("initializeTooltips");
+
+            await JS.InvokeVoidAsync("adjustTable");
+
+            // await JS.InvokeVoidAsync("initializeMouseEvent", objRef);
+        }
+    }
+
+    // [JSInvokable("MouseEvent")]
+    // public void MouseEvent(bool mouse)
+    // {
+    //     if (mouse){
+    //         mode = BarMode.VerticalInline;
+    //         visible = "true";
+    //     }
+    //     else
+    //     {
+    //         mode = BarMode.VerticalSmall;
+    //         visible = "false";
+    //     }
+    //     StateHasChanged();
+    // }
+
+    [JSInvokable("ObtenerCantidadesAsync")]
+    public async Task ObtenerCantidadesAsync()
+    {
+        try
+        {
+            using (var client = HttpClientService.CreateConfiguredHttpClient())
+            {
+                var cantidades = await client.GetFromJsonAsync<List<EstadoCantidadDTO>>("Oficios/GetCantidades");
+
+                if (cantidades != null && cantidades.Count > 0)
+                {
+
+                    var cantidadesDict = cantidades.ToDictionary(c => c.Estado, c => c.Cantidad);
+
+                    Borrador = cantidadesDict.ContainsKey("Borradores") ? cantidadesDict["Borradores"] : 0;
+                    Sin_Derivar = cantidadesDict.ContainsKey("Para Derivar") ? cantidadesDict["Para Derivar"] : 0;
+                    Nuevo = cantidadesDict.ContainsKey("Nuevos") ? cantidadesDict["Nuevos"] : 0;
+                    Pendiente = cantidadesDict.ContainsKey("Pendientes") ? cantidadesDict["Pendientes"] : 0;
+                    Para_Control = cantidadesDict.ContainsKey("Para Control") ? cantidadesDict["Para Control"] : 0;
+                    Finalizado = cantidadesDict.ContainsKey("Para Enviar") ? cantidadesDict["Para Enviar"] : 0;
+                    Archivado = cantidadesDict.ContainsKey("Archivados") ? cantidadesDict["Archivados"] : 0;
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener cantidades: {ex.Message}");
+        }
+    }
+
+    [JSInvokable("OnResize")]
+    public async Task OnResize(int newWidth)
+    {
+        screenWidth = newWidth;
+        if (screenWidth < 1400)
+        {
+             mode = BarMode.VerticalSmall;
+        }
+        else 
+        {
+            mode = BarMode.VerticalInline;
+        }
+        StateHasChanged(); // Actualizar la UI
+        await Task.Delay(800);
+        await JS.InvokeVoidAsync("adjustTable");
+    }
+
+    protected async Task Toggler()
+    {
+        mode = (mode == BarMode.VerticalInline) ? BarMode.VerticalSmall : BarMode.VerticalInline;
+        StateHasChanged();
+            
+        await Task.Delay(800);
+        await JS.InvokeVoidAsync("initializeTooltips");
+        await JS.InvokeVoidAsync("adjustTable");
+       
+    }
+
+    // Implementación del método Dispose para eliminar la suscripción
+    public async void Dispose()
+    {
+        // Llamada a JavaScript para eliminar el evento "ReceiveMessage" cuando se destruye el componente
+        await JS.InvokeVoidAsync("removeReceiveMessageHandler");
+    }
+
+    private async Task BuscarLegajo() 
+    {
+        await JS.InvokeVoidAsync("showModal1");
+    }
+
+    private async Task BuscarSac()
+    {
+        await JS.InvokeVoidAsync("showModal2");
+    }
+
+    private async void HandleSubmitLegajo()
+    {
+        using (var client = HttpClientService.CreateConfiguredHttpClient())
+        {
+            if (legajo != "")
+            {
+                await JS.InvokeVoidAsync("window.open", $"/Oficios/PorLegajo?legajo={legajo}", "_blank");
+            }
+            await JS.InvokeVoidAsync("cerrarModal1");
+        }
+    }
+
+    private async void HandleSubmitSac()
+    {
+        using (var client = HttpClientService.CreateConfiguredHttpClient())
+        {
+            if (Sac != "")
+            {
+                await JS.InvokeVoidAsync("window.open", $"/Oficios/PorSac?Sac={Sac}", "_blank");
+            }
+            await JS.InvokeVoidAsync("cerrarModal2");
+        }
+    }
+}
+
+<script>
+ 
+          // Función para registrar el objeto Blazor
+    window.registerSideBarInstance = function (SideBarInstance) {
+        // Limpiar cualquier suscripción existente para evitar duplicados
+        if (window.signalRConnection) {
+            window.signalRConnection.off("ReceiveCantidadesUpdate");
+        }
+        // Asignar la instancia específica para sideBar
+        window.SideBarInstance = SideBarInstance;
+
+        // Volver a registrar el evento solo para Observations
+        window.signalRConnection.on("ReceiveCantidadesUpdate", () => {
+            if (window.SideBarInstance) {
+                window.SideBarInstance.invokeMethodAsync("ObtenerCantidadesAsync")
+                    .then(() => console.log("ObtenerCantidadesAsync invocado en LeftBar"))
+                    .catch(err => console.error("Error al invocar ObtenerCantidadesAsync:", err));
+            }
+        });
+    };
+
+        // Función para quitar el manejador de eventos "ReceiveMessage" al finalizar
+    window.removeReceiveMessageHandler = function () {
+        if (window.signalRConnection) {
+            window.signalRConnection.off("ReceiveCantidadesUpdate");
+        }
+    }
+
+     function showModal1() {
+        $("#botonEscondido1").click();
+    }
+
+    function cerrarModal1() {
+        $("#cerrar1").click();
+    }
+
+     function showModal2() {
+        $("#botonEscondido2").click();
+    }
+
+     function cerrarModal2() {
+        $("#cerrar2").click();
+    }
+
+       window.getScreenWidth = () => {
+        return window.innerWidth;
+    };
+
+    window.subscribeToResize = (objRef) => {
+        // Asegúrate de que objRef esté definido antes de intentar usarlo
+        if (objRef) {
+            const onResize = () => {
+                // Llamar al método en .NET cuando se redimensione la ventana
+                objRef.invokeMethodAsync('OnResize', window.innerWidth)
+                    .catch(err => console.error("Error en invokeMethodAsync:", err)); // Manejo de errores
+            };
+
+            window.addEventListener('resize', onResize);
+
+            // Llamar inmediatamente para informar el tamaño inicial
+            onResize();
+        } else {
+            console.error("objRef no está definido");
+        }
+    };
+
+        function initializeMouseEvent(dotNetObjRef) {
+        // Guarda la referencia en una variable global o en un lugar accesible
+        window.dotNetObjRef = dotNetObjRef;
+    }
+
+    //    let timeoutId;
+
+    // // Función para registrar los eventos de mouse
+    // function initializeMouseEvent(dotNetObjRef) {
+    //     // Guardar la referencia DotNetObjectReference globalmente
+    //     window.dotNetObjRef = dotNetObjRef;
+
+    //     // Usar jQuery para registrar los eventos mouseenter y mouseleave
+    //     $('#LeftBar').on('mouseenter', function() {
+    //         // Si hay un timeout pendiente, lo limpiamos
+    //         clearTimeout(timeoutId);
+
+    //         // Esperar 500ms antes de disparar el evento
+    //         timeoutId = setTimeout(function() {
+    //             triggerMouseEvent(true);  // `true` para mouseenter
+    //         }, 500);
+    //     });
+
+    //     $('#LeftBar').on('mouseleave', function() {
+    //         // Si hay un timeout pendiente, lo limpiamos
+    //         clearTimeout(timeoutId);
+
+    //         // Esperar 500ms antes de disparar el evento
+    //         timeoutId = setTimeout(function() {
+    //             triggerMouseEvent(false);  // `false` para mouseleave
+    //         }, 500);
+    //     });
+    // }
+
+    // // Función para invocar el método de Blazor desde JavaScript
+    // function triggerMouseEvent(mouse) {
+    //     if (window.dotNetObjRef) {
+    //         window.dotNetObjRef.invokeMethodAsync('MouseEvent', mouse)
+    //             .then(result => {
+    //                 console.log('Método ejecutado correctamente');
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error al ejecutar el método:', error);
+    //             });
+    //     }
+    // }
+
+
+</script>

@@ -1,0 +1,42 @@
+﻿@page 
+@model SUAP_PortalOficios.Areas.Identity.Pages.Account.BlanqueoModel
+@{
+    ViewData["Title"] = "Blanqueo de Contraseña";
+    var currentId = Request.Query["id"];
+}
+
+<div class="container">
+<div class="d-flex justify-content-between">
+    <h1>@ViewData["Title"]</h1>
+    <a href="@Url.Page("/Account/Details", new { id = currentId })" style="text-decoration: none;">
+        <div class="d-flex align-items-center text-black">
+            <i class="fa fa-chevron-circle-left fa-2x mx-2" aria-hidden="true"></i>
+            <span class="align-self-center fw-bold">Volver al Usuario</span>
+        </div>
+    </a>
+</div>
+    <div class="row">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+    <partial name="_StatusMessage" for="StatusMessage" />
+        <div class="col-md-4 px-3 d-flex flex-column">
+            <section>
+                <form id="passwordForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" asp-page-handler="Form2" asp-route-id="@Model.UserId" autocomplete="off">
+                    <h4>Blanqueo de Contraseña.</h4>
+                    
+                    <hr />
+                    <div class="form-floating mb-3">
+                        <input asp-for="Password.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="contraseña" />
+                        <label asp-for="Password.Password">Contraseña provisoria</label>
+                        <span asp-validation-for="Password.Password" class="text-danger"></span>
+                    </div>
+                    <button id="passwordSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Blanquear</button>
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+</div>
+    @section Scripts {
+
+        <partial name="_ValidationScriptsPartial" />
+    }

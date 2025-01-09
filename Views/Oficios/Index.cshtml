@@ -1,0 +1,224 @@
+﻿@using SUAP_PortalOficios.Views.Shared.Components
+
+@{
+    ViewData["Title"] = "Oficios";
+}
+<div class="wrapper">
+<div class="pane center">
+    <div class="mb-2 d-sm-flex justify-content-between">
+         <h1>Oficios @(ViewBag.Estados.ToString())</h1>
+         @if(User.IsInRole("Coordinador") || User.IsInRole("Asesor"))
+         {
+             <div class="d-flex gap-2">
+                    <label class="text-nowrap align-self-center">Filtrar por Area:</label>
+                 <select id="SectionSelect" class="align-self-center form-select h-75">   
+                   
+                    @foreach (var s in ViewBag.Sections)
+                    {
+                        <option value="@s.SectionId">@s.Name</option>
+                    }
+                                       
+                 </select>
+             </div>
+         }
+    </div>
+       
+    <div>
+       <input id="state" hidden value="@ViewBag.State" />
+        <table class="table table-hover" id="tabla1" >
+            <thead>
+                <tr>
+                    <th>
+                        Id                   
+                    <th>
+                        Fecha
+                    </th>
+                    <th>
+                        Legajo
+                    </th>
+                    <th>
+                        Apellido
+                    </th>
+                    <th>
+                        Nombre
+                    </th>
+                    <th>
+                        Plazo
+                    </th> 
+                    <th>
+                        Tribunal
+                    </th>
+                    <th>
+                        A/C
+                    </th>                        
+                    <th></th>                    
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table> 
+    </div>
+</div>
+<div class="pane wright details ps-4">
+
+        <component type="@typeof(DetailsBar)" render-mode="Server"/>
+</div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        // Función JavaScript que llama a un método en C#
+        let blazorComponent;
+
+        function registerBlazorComponent(componentReference) {
+            blazorComponent = componentReference;
+        }
+
+        function HandleClick(idOficio, legajo) {
+            if (blazorComponent) {
+                blazorComponent.invokeMethodAsync('UpdateVariable', idOficio, legajo)
+                    .then(() => console.log(`Blazor variable updated with id: ${idOficio}`))
+                    .catch(err => console.error(err));
+            }
+        }
+
+
+    $(document).ready(function () {
+        var windowHeight = $(window).height();
+        var tableOffsetTop = $('#tabla1').offset().top;
+        var availableHeight = windowHeight - tableOffsetTop - 300;
+        var URL = "/Oficios/DatosTable"
+        var table = new DataTable('#tabla1', {
+            language: {
+                url: '../../lib/DataTables/Language.json',
+            }, 
+            order: [],
+            lengthMenu: [10, 25, 50, 100, { label: 'Todos', value: -1 }],
+            pageLength: 50,
+            scrollY: availableHeight + "px",
+            responsive: true,
+            deferRender: true,
+            processing: true,
+            serverSide: true,            
+            ajax: {
+                url: URL,
+                type: 'POST',
+                dataSrc: 'data',
+                data: function (d) {
+                    d.state = $('#state').val();
+                    d.section = $('#SectionSelect').val();
+                }
+            },
+            columns: [
+                { data: 'idOficio' },                
+                { data: 'fechaIngreso', 
+                    render: function (data, type, row) {
+                        if (data) {
+                            var date = new Date(data);
+                            var day = String(date.getDate()).padStart(2, '0');
+                            var month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses comienzan en 0
+                            var year = date.getFullYear();
+                            return `${day}/${month}/${year}`;
+                        }
+                        return data;
+                    }
+                },
+                { data: 'legajo' },
+                { data: 'apellido' },
+                { data: 'nombre' },
+                { data: 'plazo' },                    
+                { data: 'tribunal' },
+                { data: 'estabACargo',
+                    createdCell: function (td, cellData, rowData, row, col) {
+                    $(td).css('white-space', 'nowrap'); // Aplica el estilo CSS
+                    }
+                },
+                {
+                    data: 'idOficio',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                            return `<div style='display: flex; flex-wrap: nowrap; gap: .25rem !important;'>
+                                    <a href='/Oficios/Details/${data}' style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Ver">
+                                        <i class='fa fa-eye'></i>
+                                    </a> |
+                                    <a href='/Oficios/Derivar/${data}' style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Modificar">
+                                            <i class='fa fa-edit'></i>  
+                                    </a> |
+                                        <a href='api/Document/Download/${data}' style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Descargar" rel="noopener noreferrer">
+                                        <i class='fa fa-arrow-down'></i>
+                                    </a> |
+                                    <a href='/Oficios/Delete/${data}' style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Eliminar" >
+                                            <i class='fa fa-trash-o'></i>
+                                    </a>
+                                </div>
+                                `;
+                    }
+                }
+            ],
+            rowCallback: function (row, data, index) {
+                $(row).on('click', function () {
+                        var legajo = parseInt(data.legajo) || 0;                    
+                        HandleClick(data.idOficio, legajo)
+                });
+            },
+            layout: {
+                bottom2End: {
+                    buttons: [
+                                {
+                                    extend: 'print',
+                                    message: 'Listado de Oficios',
+                                    messageTop: 'Oficios',
+                                    customize: function (win) {
+                                        $(win.document.body).find('table').addClass('display').css('font-size', '9px');
+                                        $(win.document.body).find('tr:nth-child(odd) td').each(function (index) {
+                                            $(this).css('background-color', '#D0D0D0');
+                                        });
+                                        $(win.document.body).find('h1').css('text-align', 'center');
+                                        $(win.document.body).find('h1').text('Oficios');
+                                    },
+                                    exportOptions: {
+                                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                                    }
+                                },
+                                {
+                                    extend: 'excel',
+                                        message: 'Listado de Oficios',
+                                        messageTop: 'Oficios',
+                                    exportOptions: {
+                                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                                    }
+                                }
+                                
+                            ]
+                    }
+                }
+            });
+
+           // Recarga el DataTable al cambiar el valor del select
+            $('#SectionSelect').on('change', function () {
+                 table.ajax.reload(); // Recarga los datos del DataTable
+            });
+
+        });
+         
+
+       
+       
+    </script>
+} 
+
+
+@* @section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+} *@
+
+<style>
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+</style>
+

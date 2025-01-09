@@ -1,0 +1,233 @@
+﻿@page "/DetailsBar"
+
+@using SUAP_PortalOficios.Data
+@using SUAP_PortalOficios.Data.Repository.Implementations
+@using SUAP_PortalOficios.Data.Repository.Interfaces
+@using SUAP_PortalOficios.Models
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Identity
+@using System.Net
+@using System.Text.Json
+@using System.Text
+@using SUAP_PortalOficios.Models.DTOs
+@using SUAP_PortalOficios.Views.Shared.Components.Services
+
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAntiforgery Antiforgery
+@inject HttpClient Http
+@inject UserManager<MyUser> UserManager
+@inject IJSRuntime JSRuntime
+@inject HttpClientService HttpClientService
+@inject IInternoRepository InternoRepository
+
+
+<Div Style="font-size:10px">
+    <h3>Detalles</h3>
+
+    <hr/>
+    @if(IdOficio != 0){
+
+        <div class="my-3">
+
+            <div class="d-flex flex-wrap gap-x-3 gap-y-2 mb-2 justify-content-start text-capitalize">
+                <div>
+                    <label class="text-decoration-underline">
+                        Fecha de Ingreso:
+                    </label>
+                    <span class="fw-bold">
+                        @(Oficio.FechaIngreso.ToString("dd/MM/yy HH:mm") + " hs.")
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        SAC:
+                    </label>
+                    <span class="fw-bold">
+                        @Oficio.SAC
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        Plazo:
+                    </label>
+                    <span class="fw-bold">
+                        @(Oficio.Plazo?.PlazoName ?? "Ninguno")
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        Finalizado:
+                    </label>
+                    <span class="fw-bold">
+                        @(Oficio.FechaFin?.ToString("dd/MM/yy HH:mm" ) ?? "")
+                    </span>
+                </div>
+            </div>
+            <div class=" d-flex flex-wrap gap-x-3 gap-y-2 mb-2 justify-content-start text-capitalize">
+                <div class="">
+                    <label class="text-decoration-underline">
+                        Tribunal:
+                    </label>
+                    <span class="fw-bold">
+                        @Oficio.Tribunal?.Descripcion
+                    </span>
+                </div>
+            </div>
+            <div class=" d-flex flex-wrap gap-x-3 gap-y-2 mb-2 justify-content-start text-capitalize">
+                <div>
+                    <label class="text-decoration-underline">
+                        A Cargo:
+                    </label>
+                    <span class="fw-bold">
+                        @Oficio.Scope?.ScopeName
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        Tipo:
+                    </label>
+                    <span class="fw-bold">
+                        @Oficio.TipoOficio?.TipoOficioNombre
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        Estado:
+                    </label>
+                    <span class="fw-bold">
+                        @Oficio.Estado?.EstadoNombre
+                    </span>
+                </div>
+                <div>
+                    <label class="text-decoration-underline">
+                        Medio Ing:
+                    </label>
+                    <span class="fw-bold">
+                        @Oficio.MedioIng?.MedioName
+                    </span>
+                </div>
+            </div>
+        </div>
+        @if (InternoEncontrado != null)
+        {
+            <hr />
+            <div class="d-sm-flex justify-content-between">
+                <h4>Interno/a: </h4>
+
+            </div>
+            <div class="d-sm-flex gap-5">
+                <div>
+                    <label>Legajo:</label> <span class="fw-bold">
+                        @(InternoEncontrado.Legajo.ToString("N0"))
+                    </span>
+                </div>
+                @if (InternoEncontrado.EnLibertad == 2)
+                {
+                    <label class="fw-bold text-danger">(EN LIBERTAD)</label>
+                }
+            </div>
+            <div class="d-sm-flex gap-5">
+                <div>
+                    <label>Apellido:</label> <span class="fw-bold">@InternoEncontrado.Apellido</span>
+                </div>
+                <div>
+                    <label>Nombres:</label> <span class="fw-bold">@InternoEncontrado.Nombre</span>
+                </div>
+            </div>
+            @if (InternoEncontrado.EnLibertad != 2)
+            {
+                <div class="d-sm-flex gap-5 @(InternoEncontrado.Establecimiento != @Oficio.Scope?.ScopeName ? "bg-yellow" : "")">
+                    <div>
+                        <label>Alojamiento Actual:</label> <span class="fw-bold">@InternoEncontrado.Establecimiento</span>
+                    </div>
+                    <div>
+                        <label>Pabellón:</label> <span class="fw-bold"> @InternoEncontrado.Pabellon</span>
+                    </div>
+                </div>
+            }
+        
+
+        }
+        else
+        {
+            <p class="text-center bold">No posee interno asosciado.</p>
+        }
+
+        <hr/>
+        <Observations OficioId="IdOficio" @ref="observations"></Observations>
+        <hr/>
+        <ListSections AreaXOficio="Areas" Devolucion="false" MaxHeight="20rem"></ListSections>
+        <hr />
+    }
+    else 
+    {
+        <h4>Seleccione un oficio para ver el Detalle</h4>
+    }
+
+</Div>
+@code {
+    private int IdOficio;
+    private int legajo;
+    private List<Oficios_x_Area> Areas { get; set; } = new List<Oficios_x_Area>();
+    private Oficios Oficio  = new Oficios();
+    private Observations observations;
+    private InternoResultadoDTO? InternoEncontrado;
+
+    [JSInvokable]
+    public async Task UpdateVariable(int oficioId, int legajo)
+    {
+        IdOficio = oficioId;
+        this.legajo = legajo;
+        await GetDetails(oficioId);
+        StateHasChanged();
+    }
+
+    private async Task GetDetails(int IdOficio)
+    {
+        using (var client = HttpClientService.CreateConfiguredHttpClient())
+        {
+            var response = await client.GetAsync($"oficios/DetalleOficio/{IdOficio}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Oficio = await response.Content.ReadFromJsonAsync<Oficios>() ?? new Oficios();
+                Areas = Oficio.oficios_X_Areas?.ToList() ?? new List<Oficios_x_Area>();
+                await BuscarInterno();
+            }
+            else
+            {
+                Console.Write("No hay Establecimientos...");
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Registrar referencia a este componente para el manejo desde JS
+            await JSRuntime.InvokeVoidAsync("registerBlazorComponent", DotNetObjectReference.Create(this));
+        }
+    }
+
+    private async Task BuscarInterno()
+    {
+        InternoEncontrado = null;
+        if (legajo != 0) 
+        {          
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var User = authState.User;
+            try
+            {
+                InternoEncontrado = await InternoRepository.BuscarInternoAsync(legajo);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+        StateHasChanged();
+    }
+}

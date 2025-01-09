@@ -1,0 +1,79 @@
+﻿@model IEnumerable<SUAP_PortalOficios.Models.DTOs.Borrador>
+
+<div class="wrapper">
+<h2>Borradores</h2>
+<p>
+    <a asp-controller="Oficios" asp-action="UploadPdf">Agregar</a>
+</p>
+    <table id="tabla1" class="table-hover display">
+    <thead>
+        <tr>
+            <th>
+                Id
+            </th>
+            <th>
+                Fecha de Ingreso
+            </th>
+            <th>
+                Archivo
+            </th>
+            <th>
+                Tamaño
+            </th>      
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr onclick="window.location.href='@Url.Action("Create", "Oficios", new { id = item.IdOficio })'">
+            <td>
+                @Html.DisplayFor(modelItem => item.IdOficio)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FechaIngreso)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FileName)
+            </td>
+            <td>
+                @((Convert.ToInt32(item.FileSize) / 1024)) KB
+            </td>
+            <td>
+                <a href="oficios/delete/@item.IdOficio" style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Eliminar">
+                    <i class="fa fa-trash-o"></i>
+                </a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+</div>
+    
+<style>
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+    
+</style>
+
+<script>
+
+    $(document).ready(function () {
+        var windowHeight = $(window).height();
+        var tableOffsetTop = $('#tabla1').offset().top;
+        var availableHeight = windowHeight - tableOffsetTop - 250;
+
+        var table = new DataTable('#tabla1', {
+            language: {
+                url: '../../lib/DataTables/Language.json',
+            },
+            order: [],
+            // order:[[1, 'asc']],
+            lengthMenu: [10, 25, 50, 100, { label: 'Todos', value: -1 }],
+            pageLength: 50,
+            scrollY: availableHeight + "px",
+            responsive: true,
+            processing: true,          
+        });       
+    });
+</script>

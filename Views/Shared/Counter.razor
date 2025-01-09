@@ -1,0 +1,25 @@
+﻿<h1>Detalle</h1>
+
+<p>Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+
+@code {
+    [Parameter]
+    public int InitalValue { get; set; }
+
+    private int currentCount;
+
+    // Método para inicializar currentCount una vez que los parámetros han sido establecidos
+    protected override void OnParametersSet()
+    {
+        // Asignar el valor del parámetro al contador
+        currentCount = InitalValue;
+    }
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

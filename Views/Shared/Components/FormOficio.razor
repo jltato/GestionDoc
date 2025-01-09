@@ -1,0 +1,277 @@
+﻿@page "/FormOficio"
+@using Microsoft.AspNetCore.Identity
+@using SUAP_PortalOficios.Models.DTOs
+@using SUAP_PortalOficios.Models
+@using SUAP_PortalOficios.Data
+@using System.Net
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.Net.Http.Headers
+@using System.Diagnostics
+@using System.Security.Claims
+@using SUAP_PortalOficios.Views.Shared.Components
+@using SUAP_PortalOficios.Views.Shared.Components.Services
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAntiforgery Antiforgery
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject SignInManager<MyUser> SignInManager
+@inject UserManager<MyUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject HttpClientService HttpClientService
+
+<div>
+    <EditForm Model="@modeloFormulario" autocomplete="off">
+        <div class="d-flex justify-content-between">
+            <h1>@title</h1>
+            @if(changeEstab && oficios.IdEstado >= 2)
+            {
+                <div class="d-sm-flex gap-2">
+                    <Label class="align-content-center" Style="white-space:nowrap;">A Cargo:</Label>
+                    <InputSelect id="ACargo" class="form-control text-center" @bind-Value="oficios.IdEstabACargo">
+                        @foreach(var estab in Establecimientos)
+                        {
+                            <option value="@estab.Id">@estab.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            }
+        </div>
+
+        <hr />
+        <input type="hidden" @bind-value="oficios.IdOficio" />
+        <input type="hidden" @bind-value="oficios.UserId" />
+        <Div Class="d-sm-flex flex-wrap justify-content-between gap-2 ">
+            <div class="d-sm-flex gap-2">
+                <label asp-for="tipoOficio" class=" col-form-label">Tipo:</label>
+                <InputSelect id="tipoOficio" class="form-control" @bind-Value="oficios.IdTipoOficio">
+                    @foreach (var tipo in Tipos)
+                    {
+                        <option value="@tipo.Id">@tipo.Nombre</option>
+                    }
+                </InputSelect>
+                <span asp-validation-for="tipoOficio" class="text-danger"></span>
+            </div>
+            <div class="d-sm-flex gap-2">
+                <label asp-for="plazo" class="col-form-label">Plazo:</label>
+                <InputSelect id="plazo" class="form-control" @bind-Value="oficios.IdPlazo">
+                    <option value="0">Sin Plazo</option>
+                    @foreach (var plazo in Plazos)
+                    {
+                        <option value="@plazo.Id">@plazo.Nombre</option>
+                    }
+                </InputSelect>
+                <span asp-validation-for="plazo" class="text-danger"></span>
+            </div>
+            <div class="d-sm-flex gap-2">
+                <Label asp-for="SAC" class="col-form-label">SAC:</Label>
+                <InputText id="SAC" class="form-control" style="max-width:100px" @bind-Value="oficios.SAC" ></InputText>
+            </div>
+            <div class="d-sm-flex gap-2">
+                <label asp-for="IdMedio" class=" col-form-label">Medio:</label>
+                <InputSelect id="IdMedio" class="form-control" @bind-Value="oficios.IdMedio">
+                    @foreach (var tipo in Medios)
+                    {
+                        <option value="@tipo.Id">@tipo.Nombre</option>
+                    }
+                </InputSelect>
+                <span asp-validation-for="IdMedio" class="text-danger"></span>
+            </div>
+        </Div>
+        <Div Class="d-sm-flex justify-content-between mt-2">
+            <label asp-for="IdTribunal" class="col-form-label me-2">Tribunal: </label>
+            <InputSelect id="IdTribunal" class="form-control chosen-select" @bind-Value="oficios.IdTribunal">
+                <option value="0">Seleccione Tribunal</option>
+                @foreach (var tribunal in Tribunales)
+                {
+                    <option value="@tribunal.Id">@tribunal.Nombre</option>
+                }
+            </InputSelect>
+            <span asp-validation-for="IdTribunal" class="text-danger"></span>
+        </Div>
+        <div class="gap-2 mx-1 my-2 ">
+            <Observations
+            OficioId="oficios.IdOficio"
+            ></Observations>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public FormCargaDTO modeloFormulario { get; set; } = new FormCargaDTO();
+    [Parameter] public List<Sections> secciones { get; set; } = new List<Sections>();
+    [Parameter] public Oficios oficios { get; set; } = new Oficios();
+    private BusquedaModel inputbusqueda { get; set; } = new BusquedaModel();
+    private List<DropDownOption> Plazos { get; set; } = new List<DropDownOption>();
+    private List<DropDownOption> Tipos { get; set; } = new List<DropDownOption>();
+    private List<DropDownOption> Medios { get; set; } = new List<DropDownOption>();
+    private List<DropDownOption> Tribunales { get; set; } = new List<DropDownOption>();
+    private List<DropDownOption> Derivacion { get; set; } = new List<DropDownOption>();
+    private List<DropDownOption> Establecimientos { get; set; } = new List<DropDownOption>();
+    private MyUser? user;
+    private bool changeEstab;
+    private string? title;
+    public DotNetObjectReference<FormOficio>? objRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            using (var client = HttpClientService.CreateConfiguredHttpClient())
+            {
+                var response = await client.GetAsync("api/Document/GetDropDownData");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<DropDownData>();
+
+                    Plazos = result.Plazos;
+                    Tipos = result.Tipos;
+                    Medios = result.Medios;
+                    Tribunales = result.Tribunales;
+                    Derivacion = result.Derivacion;
+                    Establecimientos = result.Establecimientos;
+                }
+            }
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            user = await UserManager.GetUserAsync(authState.User);
+            changeEstab = await UserManager.IsInRoleAsync(user, "Coordinador");
+            switch (oficios.IdEstado)
+            {
+                case 1:
+                    title = "Nuevo Oficio";
+                    break;
+                case 2:
+                    title = "Derivación";
+                    break;
+                default:
+                    title = "Modificación";
+                    break;
+            }
+
+            StateHasChanged();
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message, ex);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("registerObjRef", objRef);
+            await JS.InvokeVoidAsync("inicializarChosen");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("recargarChosen");
+        }
+    }
+
+    public class DropDownData
+    {
+        public List<DropDownOption> Plazos { get; set; }
+        public List<DropDownOption> Tipos { get; set; }
+        public List<DropDownOption> Medios { get; set; }
+        public List<DropDownOption> Tribunales { get; set; }
+        public List<DropDownOption> Derivacion { get; set; }
+        public List<DropDownOption> Establecimientos { get; set; }
+    }
+
+    public class DropDownOption
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+    }
+
+    public class BusquedaModel
+    {
+        public string? Busqueda { get; set; }
+    }
+
+    [JSInvokable("ReDerivacion")]
+    public async Task ReDerivacion(int newACargo)
+    {
+        using (var client = HttpClientService.CreateConfiguredHttpClient())
+        {
+            // Crear el contenido URL-encoded
+            var data = new Dictionary<string, string>
+        {
+            {"NewACargo", newACargo.ToString() },
+            {"OficioId", oficios.IdOficio.ToString() }
+
+        };
+            var content = new FormUrlEncodedContent(data);
+
+            var response = await client.PostAsync("Oficios/ReDerivacion", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("aceptar");
+                
+            }
+        }
+    }   
+}
+
+
+<script>
+
+    let objRef = null;
+
+    // Registra el objeto de referencia de .NET en JavaScript
+    function registerObjRef(reference) {
+        objRef = reference;
+    }
+
+
+    $(document).on("change", "#ACargo", async function () {
+        // Obtén el valor seleccionado
+        var selectedValue = $(this).val();
+        // Llama a la función JavaScript
+        await JsReDerivacion(selectedValue);
+    });
+
+    async function JsReDerivacion(selectedValue) {
+    await ShowConfirm(
+        "Derivar Oficio?", 
+        "Si continua, este oficio pasará a otro establecimiento y ya no estará disponible en el establecimiento actual"
+    ).then(function(res) {
+        if (res === true) {
+            var number = parseInt(selectedValue);
+                objRef.invokeMethodAsync("ReDerivacion", number);
+        } else {
+            console.log("Operación cancelada");
+        }
+    }).catch(function(err) {
+        console.error("Error al mostrar la confirmación:", err);
+    });
+}
+
+    function showModal() {
+        $("#botonEscondido").click();
+    }
+    function cerrarModal() {
+        $("#cerrar").click();
+    }
+
+    function inicializarChosen () {
+        $(".chosen-select").chosen();
+    };
+
+    function recargarChosen () {
+        $(".chosen-select").trigger("chosen:updated");
+    };
+
+    function getSelectedTribunal(selectId) {
+    return document.getElementById(selectId).value;
+    }
+     async function aceptar(){
+          await CustomAlertAndRedirect("Derivado", "Oficio ha sido correctamente derivado", "oficios/index/Pendientes" )
+     }
+</script>

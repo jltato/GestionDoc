@@ -1,0 +1,123 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <Compile Remove="Components\**" />
+    <Compile Remove="Views\pdf\**" />
+    <Content Remove="bin\**" />
+    <Content Remove="Components\**" />
+    <Content Remove="Views\pdf\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="Components\**" />
+    <EmbeddedResource Remove="Views\pdf\**" />
+    <None Remove="bin\**" />
+    <None Remove="Components\**" />
+    <None Remove="Views\pdf\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Areas\Identity\Pages\Account\Roles.cshtml.cs" />
+    <Compile Remove="Controllers\pdfController.cs" />
+    <Compile Remove="Hubs\MessageHub.cs" />
+    <Compile Remove="Hubs\SignalRConnection.cs" />
+    <Compile Remove="NullEmailSender.cs" />
+    <Compile Remove="Views\Shared\Components\ConfigHttpClient.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Areas\Identity\Pages\Account\Roles.cshtml" />
+    <Content Remove="Views\Shared\Components\DerivacionPrimaria.razor" />
+    <Content Remove="Views\Shared\Components\TablaResultados.razor" />
+    <Content Remove="Views\Shared\_BusquedaInterno.cshtml" />
+    <Content Remove="Views\Shared\_DetalleOficio.cshtml" />
+    <Content Remove="Views\Shared\_LeftNavPartial.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Views\Shared\Counter.razor" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\fonts\fontawesome-webfont.svg" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\fonts\fontawesome-webfont.woff2" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\animated.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\bordered-pulled.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\core.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\fixed-width.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\font-awesome.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\icons.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\larger.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\list.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\mixins.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\path.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\rotated-flipped.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\screen-reader.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\stacked.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\less\variables.less" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\font-awesome.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_animated.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_bordered-pulled.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_core.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_fixed-width.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_icons.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_larger.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_list.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_mixins.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_path.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_rotated-flipped.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_screen-reader.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_stacked.scss" />
+    <None Include="wwwroot\lib\font-awesome-4.7.0\scss\_variables.scss" />
+    <None Include="wwwroot\_framework\blazor.webassembly.js" />
+    <None Include="wwwroot\_framework\dotnet.js" />
+    <None Include="wwwroot\_framework\dotnet.js.map" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.13.1" />
+    <PackageReference Include="Blazorise" Version="1.6.2" />
+    <PackageReference Include="Blazorise.Bootstrap5" Version="1.6.2" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.6.2" />
+    <PackageReference Include="itext7" Version="9.0.0" />
+    <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.0.0" />
+    <PackageReference Include="itext7.bouncy-castle-fips-adapter" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.JSInterop.WebAssembly" Version="8.0.10" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <PackageReference Include="pdfmake" Version="0.1.18" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
+    <PackageReference Include="Serilog.Filters.Expressions" Version="2.1.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="9.0.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="bin\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\lib\jquery\dist\jquery.js">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

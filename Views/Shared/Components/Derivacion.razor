@@ -1,0 +1,540 @@
+﻿@page "/Derivacion"
+@using Blazorise.Extensions
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SUAP_PortalOficios.Models.DTOs
+@using SUAP_PortalOficios.Models
+@using SUAP_PortalOficios.Data.Repository.Interfaces
+@using SUAP_PortalOficios.Data
+@using System.Net
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.Net.Http.Headers
+@using System.Diagnostics
+@using System.Security.Claims
+@using SUAP_PortalOficios.Views.Shared.Components.Services
+
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAntiforgery Antiforgery
+@inject HttpClient Http
+@inject IInternoRepository InternoRepository
+@inject IJSRuntime JS
+@inject SignInManager<MyUser> SignInManager
+@inject UserManager<MyUser> UserManager
+@inject HttpClientService HttpClientService
+
+<div>
+    <FormOficio 
+    modeloFormulario="modeloFormulario"
+    secciones="Sections"
+    oficios="@oficio">
+    </FormOficio>
+</div>
+
+<div>
+    <div class="form-control mb-2 ">
+        <EditForm Model="inputbusqueda" OnValidSubmit="BuscarInterno">
+            <div Class="d-flex flex-wrap gap-2 mb-2 align-items-center">
+                <h4 class="text-decoration-underline" style="white-space:nowrap;">Modificar Interno/a</h4>
+                <div class="d-sm-flex gap-2 justify-content-around">
+                    <label class="form-check-label" style="white-space:nowrap;"> Ampliar Busqueda: </label>
+                    <input class="form-check-input" type="checkbox" @onchange="AmpliarBusqueda" /> 
+                </div>
+                <div class="d-sm-flex gap-2 justify-content-around">
+                    <label class="form-check-label" style="white-space:nowrap;"> En Libertad: </label>
+                    <input class="form-check-input" type="checkbox" @onchange="BuscarLibertad" />
+                </div>
+            </div>
+            <div Class="d-flex gap-2 mb-2">
+                <input type="text" @bind="inputbusqueda.Busqueda" placeholder="Introduce Legajo o Nombre" class="form-control" />
+                <button type="submit" class="btn btn-secondary">Buscar</button>
+            </div>
+        </EditForm>
+        <button id="botonEscondido" class="d-none" data-bs-toggle="modal" data-bs-target="#ListadoModal">modal</button>
+        <div id="datosInterno">
+            @if (busquedaRealizada)
+            {
+                @if (InternoEncontrado != null)
+                {
+                    <div class="d-sm-flex justify-content-between">
+                        <h4>Interno/a: </h4>
+                        @if (oficiosAnteriores)
+                        {
+                            <Button Class="btn btn-sm btn-danger" @onclick="VerOficiosPendientes">Ver Oficios Pendientes</Button>
+                        }
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label>Legajo:</label> <span class="fw-bold">
+                                @(InternoEncontrado.Legajo.ToString("N0"))
+                            </span>
+                        </div>
+                        @if (InternoEncontrado.EnLibertad == 2)
+                        {
+                            <label class="fw-bold">(EN LIBERTAD)</label>
+                        }
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label >Apellido:</label> <span class="fw-bold">@InternoEncontrado.Apellido</span>
+                        </div>
+                        <div>
+                            <label >Nombres:</label> <span class="fw-bold">@InternoEncontrado.Nombre</span>
+                        </div>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label>Tipo de Detención:</label> <span class="fw-bold">@InternoEncontrado.TipoDetencion</span>
+                        </div>
+                        <div>
+                            <label class="form-check-label">Art. 11:</label> <input disabled type="checkbox" checked="@articulo11" />
+                        </div>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label >Establecimiento:</label> <span class="fw-bold">@InternoEncontrado.Establecimiento</span>
+                        </div>
+                        <div>
+                            <label >Pabellón:</label> <span class="fw-bold"> @InternoEncontrado.Pabellon</span>
+                        </div>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <label >Tribunales:</label> <span class="fw-bold" >@InternoEncontrado.Tribunales</span>
+                    </div>
+                    <div class="d-sm-flex gap-5">
+                        <div>
+                            <label>Fase:</label> <span class="fw-bold">@InternoEncontrado.Fase</span>
+                        </div>
+                        <div>
+                            <label>Concepto:</label> <span class="fw-bold"> @InternoEncontrado.Concepto</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-center bold">No se encontraron resultados.</p>
+                }
+            }
+        </div>
+    </div>
+    <div class="form-control mb-2 bg-light">
+        <div class="d-sm-flex flex-wrap gap-2 justify-content-between bg-light">
+            <div class="d-sm-flex justify-content-between align-items-center">
+                <div class="d-sm-flex gap-2 justify-content-around ">
+                    <label asp-for="scope" class="col-form-label" style="white-space:nowrap;">Derivar a:</label>
+                    <select id="scope" class="form-control" @bind="selectedSection">
+                        <option value="0">Seleccionar</option>
+                        <option value="100">INFORME CRIMINOLÓGICO</option>
+                        @foreach (var sect in Sections)
+                        {
+                            <option value="@sect.SectionId">@sect.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="scope" class="text-danger"></span>
+                </div>              
+            </div>
+            <button @onclick="AgregarAlListado" Class="btn btn-sm btn-primary">
+                <Icon Class="fa fa-arrow-circle-down"></Icon>
+                Agregar al Listado
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="ListadoModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                <div class="d-flex justify-content-end">
+                    <button id="cerrar" type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-header align-self-center">
+                    <h4>Seleccionar Interno</h4>
+                </div>
+                <div Class="modal-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Legajo</th>
+                                <th>Apellido</th>
+                                <th>Nombre</th>
+                                <th>Tipo de Detención</th>
+                                <th>Establecimiento</th>
+                                <th>Pabellón</th>
+                            </tr>
+                        </thead>
+                        <tbody class=" overflow-auto">
+                            @foreach (var interno in listaInternos)
+                            {
+                                <tr @onclick="() => SeleccionarInterno(interno)" style="cursor: pointer;">
+                                    <td>@interno.Legajo</td>
+                                    <td>@interno.Apellido</td>
+                                    <td>@interno.Nombre</td>
+                                    <td>@interno.TipoDetencion</td>
+                                    <td>@interno.Establecimiento</td>
+                                    <td>@interno.Pabellon</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-auto mb-1" style="max-height: 200px; min-height:100px">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Derivado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in resultadoActual)
+                {
+                    <tr>                        
+                        <td>@item.Name</td>
+                        <td class="d-none">@item.SectionId</td>
+                        <td> <button @onclick="()=>EliminarDelListado(item)" class="btn btn-danger btn-sm">Eliminar</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <Div Class="d-flex justify-content-end gap-2">
+        <form method="post" action="/oficios/DevuelveOficio" onsubmit="return confirmAction(this, '¿Está seguro que desea devolver este oficio? Debe especificar los motivos en las Observaciones')">
+            <input type="hidden" name="oficioId" value="@oficio.IdOficio" />
+            <button type="submit" class="btn btn-danger">Devolver</button>
+        </form>
+        <Button @onclick="GuardarDatos" Class="btn btn-success">Derivar a Áreas</Button>
+    </Div>
+
+</div>
+
+
+
+@code {
+    [Parameter] public Oficios oficio { get; set; }
+    [Parameter] public InternoResultadoDTO? InternoEncontrado { get; set; }
+    [Parameter] public List<Sections> resultadoActual { get; set; } = new List<Sections>();
+    [Parameter] public string? returnUrl { get; set; }
+
+    private List<Sections> Sections { get; set; } = new List<Sections>();
+    private string Busqueda { get; set; } = string.Empty;
+    private BusquedaModel inputbusqueda { get; set; } = new BusquedaModel();
+    private bool BusquedaLibertad = false;
+    private bool BusquedaAmpliada = false;
+    private int selectedSection { get; set; }
+    private bool articulo11 = false;
+    private bool oficiosAnteriores = false;
+    private MyUser? user;
+    private ClaimsPrincipal User;
+    private bool busquedaRealizada = false;
+    private bool mostrarPopup;
+    private List<InternoResultadoDTO> listaInternos = new List<InternoResultadoDTO>();
+    private FormCargaSecundariaDTO modeloFormularioSecundario = new FormCargaSecundariaDTO();
+    private FormCargaDTO modeloFormulario = new FormCargaDTO();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (InternoEncontrado != null)
+        {
+            await OficiosPendientes(InternoEncontrado);
+            articulo11 = InternoEncontrado.Art11 == "1";
+            busquedaRealizada = true;
+        }
+        await CargaSections();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = await UserManager.GetUserAsync(authState.User);
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("inicializarChosen");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("recargarChosen");
+        }
+    }
+
+    private async Task AmpliarBusqueda(ChangeEventArgs e)
+    {
+        BusquedaAmpliada = (bool)e.Value;       
+    }
+
+    private async Task BuscarLibertad(ChangeEventArgs e)
+    {
+        BusquedaLibertad = (bool)e.Value;
+    }
+
+    private async Task CargaSections()
+    {
+        using (var client = HttpClientService.CreateConfiguredHttpClient())
+        {
+            var response = await client.GetAsync($"api/Document/GetSections");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Sections.Clear();
+                Sections = await response.Content.ReadFromJsonAsync<List<Sections>>();
+                selectedSection = 0;
+                StateHasChanged();
+            }
+            else
+            {
+                Console.Write("No hay Establecimientos...");
+            }
+        }
+    }
+
+    private async Task BuscarInterno()
+    {
+        busquedaRealizada = false;
+        mostrarPopup = false;
+        InternoEncontrado = null;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        User = authState.User;
+        try
+        {
+            if (int.TryParse(inputbusqueda.Busqueda, out int legajo))
+            {
+                // Buscar por número de legajo
+                InternoEncontrado = await InternoRepository.BuscarInternoAsync(legajo, User, BusquedaAmpliada, BusquedaLibertad);
+                if (InternoEncontrado != null)
+                {
+                    await OficiosPendientes(InternoEncontrado);
+                    articulo11 = InternoEncontrado.Art11 == "1";
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                List<InternoResultadoDTO?> resultados;
+                // Buscar por nombre o apellido
+                resultados = await InternoRepository.BuscarInternoAsync(inputbusqueda.Busqueda, User, BusquedaAmpliada, BusquedaLibertad);
+                if (resultados != null)
+                {
+                    if (resultados.Count == 1)
+                    {
+                        InternoEncontrado = resultados.First();
+                        if (InternoEncontrado != null)
+                        {
+                            await OficiosPendientes(InternoEncontrado);
+                            articulo11 = InternoEncontrado.Art11 == "1";
+                            StateHasChanged();
+                        }
+                    }
+                    else if (resultados.Count > 1)
+                    {
+                        listaInternos = resultados;
+                        //mostrarPopup = true;
+                        await JS.InvokeVoidAsync("showModal");
+
+                    }
+                }
+                else
+                {
+                    InternoEncontrado = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al buscar interno: {ex.Message}");
+        }
+        finally
+        {
+            busquedaRealizada = true;
+        }
+    }
+
+    private async void SeleccionarInterno(InternoResultadoDTO interno)
+    {
+        InternoEncontrado = interno;
+        if (interno != null)
+        {            
+            await OficiosPendientes(interno);
+            articulo11 = InternoEncontrado.Art11 == "1";
+            StateHasChanged();
+        }
+
+        await JS.InvokeVoidAsync("cerrarModal");
+    }
+
+    private void AgregarAlListado()
+    {
+        if (selectedSection != 0)
+        {
+            if (selectedSection == 100)
+            {
+                // Agregar todas las secciones predeterminadas
+                var seccionesATodas = new List<Sections>
+            {
+                new Sections { SectionId = 6, Name = "TRABAJO SOCIAL" },
+                new Sections { SectionId = 7, Name = "PSICOLOGIA" },
+                new Sections { SectionId = 8, Name = "EDUCACION" },
+                new Sections { SectionId = 9, Name = "LABORTERAPIA" },
+                new Sections { SectionId = 10, Name = "SERVICIO MEDICO" },
+                new Sections { SectionId = 5, Name = "SECRETARIA DE SEGURIDAD" }
+            };
+
+                foreach (var sec in seccionesATodas)
+                {
+                    // Verificar que no exista ya en el listado
+                    if (!resultadoActual.Any(i => i.SectionId == sec.SectionId))
+                    {
+                        resultadoActual.Add(sec);
+                    }
+                }
+            }
+            else 
+            {
+                var seccion = new Sections();
+                seccion.SectionId = selectedSection;
+                var SectionSeleccionado = Sections.FirstOrDefault(s => s.SectionId == selectedSection);
+                if (SectionSeleccionado != null)
+                {
+                    seccion.SectionId = SectionSeleccionado.SectionId;
+                    seccion.Name = SectionSeleccionado.Name;
+                }
+
+                // Verificar si ya existe un objeto con el mismo Legajo y DerivacionId
+                if (!resultadoActual.Any(i => i.SectionId == seccion.SectionId))
+                {
+                    resultadoActual.Add(seccion);
+                }
+            }
+
+
+
+        }
+    }
+
+    private void EliminarDelListado(Sections item)
+    {
+        resultadoActual.Remove(item);
+        StateHasChanged();
+    }
+
+    private async void VerOficiosPendientes()
+    {
+        if (InternoEncontrado != null)
+        {
+            await JS.InvokeVoidAsync("window.open", $"/Oficios/PorLegajo?legajo={InternoEncontrado?.Legajo}", "_blank");
+        }
+    }
+
+    private async Task GuardarDatos()
+    {
+        if (resultadoActual.Count > 0)
+        { 
+            oficio.UserId = user.Id;
+            if (oficio.IdEstado == 2){
+                oficio.IdEstado = 3;
+            }
+            
+            modeloFormularioSecundario.RegistroList = resultadoActual;
+            var selectedValue = await JS.InvokeAsync<string>("getSelectedTribunal", "IdTribunal");
+            oficio.IdTribunal = int.Parse(selectedValue);
+
+            if(InternoEncontrado != null)
+            {
+                List<Interno_x_Oficio> InternoxOficio = new List<Interno_x_Oficio>();
+                Interno_x_Oficio interno_X_Oficio = new Interno_x_Oficio();
+                interno_X_Oficio.OficiosId = oficio.IdOficio;
+                interno_X_Oficio.Legajo = InternoEncontrado.Legajo;
+                InternoxOficio.Add(interno_X_Oficio);
+                oficio.interno_X_Oficios = InternoxOficio;
+            }
+                      
+            modeloFormularioSecundario.Oficios = oficio;
+
+            using (var client = HttpClientService.CreateConfiguredHttpClient())
+            {
+                var response = await client.PostAsJsonAsync("/Oficios/GuardarDeriva", modeloFormularioSecundario);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await JS.InvokeVoidAsync("CustomAlertAndRedirect","Derivado", "El Oficio ha sido Derivado Exitosamente", returnUrl);
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("ShowAlert", "Error" ,"Ha ocurrido un problema intente nuevamente");
+                }
+            }
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("ShowAlert", "Atención!" ,"Debe agregar por lo menos una derivación al listado");
+        }
+
+
+    }
+
+    private async Task OficiosPendientes(InternoResultadoDTO Interno)
+    {
+        using (var client = HttpClientService.CreateConfiguredHttpClient())
+        {
+            var response = await client.GetAsync($"/Oficios/GetOficiosPendientes?legajo={Interno.Legajo}&oficioId={oficio.IdOficio}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                oficiosAnteriores = await response.Content.ReadFromJsonAsync<bool>();
+            }
+        }
+    }
+
+    public class DropDownOption
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+    }
+
+    public class BusquedaModel
+    {
+        public string? Busqueda { get; set; }
+    }
+
+    
+}
+<script>
+
+
+    function inicializarChosen () {
+        $(".chosen-select").chosen();
+    };
+
+    function recargarChosen () {
+        $(".chosen-select").trigger("chosen:updated");
+    };
+
+    function getSelectedTribunal(selectId) {
+    return document.getElementById(selectId).value;
+    };
+
+
+    async function confirmAction(form, message) {
+    // Prevenimos el envío inmediato del formulario
+        event.preventDefault();
+
+        // Esperamos la respuesta del usuario
+        const userConfirmed = await ShowConfirm('Confirmar acción', message);
+
+        // Si el usuario confirma, enviamos el formulario
+        if (userConfirmed) {
+            form.submit(); // Enviar el formulario
+        }
+    }
+
+
+</script>
+

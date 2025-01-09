@@ -1,0 +1,36 @@
+﻿@using SUAP_PortalOficios.Views.Shared.Components
+@using System.IO
+@using Blazorise
+@model SUAP_PortalOficios.Models.DocumentPdf
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<style>
+    .b-text-drop{
+        height:15vh;
+        font-size:1.2rem !important;
+        padding-top: 5vh !important;
+        background-color: #e9ecef;
+    }
+</style>
+
+<h1>Carga</h1>
+
+<h4>Documentos</h4>
+<hr />
+<div class="d-flex justify-content-center ">
+    <div class=" col-sm-6 ">                    
+        <component type="@typeof(FilePikerCustom)" 
+                    render-mode="Server"
+                    param-ShowMode="FilePickerShowMode.List"
+                   />
+    </div>
+    
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

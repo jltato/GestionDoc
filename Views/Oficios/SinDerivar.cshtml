@@ -1,0 +1,132 @@
+﻿@model IEnumerable<SUAP_PortalOficios.Models.DTOs.OficiosPendientesDTO>
+
+<div class="wrapper">
+<h2>Oficios Para Derivar</h2>
+<p>
+    <a asp-controller="oficios" asp-action="UploadPdf">Agregar</a>
+</p>
+    <table id="tabla1" class="table-hover display ">
+    <thead>
+        <tr>
+            <th>
+                Id
+            </th>
+            <th>
+                Fecha de Ingreso
+            </th>
+            <th>
+                Plazo
+            </th>
+            <th>
+                Legajo
+            </th>
+            <th>
+                Apellido
+            </th>
+            <th>
+                Nombre
+            </th>
+            <th>
+                Tipo
+            </th>
+                <th>
+                Tribunal
+            </th>
+            <th>
+                SAC
+            </th>
+            <th>
+                A Cargo
+            </th>
+            
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+</div>
+    
+<style>
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+    
+</style>
+
+<script>   
+    $(document).ready(function () {
+        var windowHeight = $(window).height();
+        var tableOffsetTop = $('#tabla1').offset().top;
+        var availableHeight = windowHeight - tableOffsetTop - 250;
+        var URL = "oficios/DatosSinDerivar"
+        var table = $('#tabla1').DataTable({
+            language: {
+                url: '../../lib/DataTables/Language.json',
+            },
+            order: [],            
+            lengthMenu: [10, 25, 50, 100, { label: 'Todos', value: -1 }],
+            pageLength: 50,
+            scrollY: availableHeight + "px",
+            responsive: true,            
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: URL,
+                type: 'POST',
+                dataSrc: 'data'
+            },
+            columns: [
+                { data: 'idOficio' },
+                {
+                    data: 'fechaIng',
+                    render: function (data, type, row) {
+                        if (data) {
+                            var date = new Date(data);
+                            var day = String(date.getDate()).padStart(2, '0');
+                            var month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses comienzan en 0
+                            var year = date.getFullYear();
+                            var hours = String(date.getHours()).padStart(2, '0'); // Obtener horas con dos dígitos
+                            var minutes = String(date.getMinutes()).padStart(2, '0');
+                            
+                            return `${day}/${month}/${year} ${hours}:${minutes}hs.`;
+                        }
+                        return data;
+                    }
+                },
+                { data: 'plazo' },
+                { data: 'legajo' },
+                { data: 'apellido' },
+                { data: 'nombre' },               
+                { data: 'tipo' },
+                { data: 'tribunal' },
+                { data: 'sac' },
+                { data: 'estabACargo' },
+                {
+                    data: 'idOficio',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        return `
+                                <a href='/oficios/delete/${data}' style='text-decoration: none; color:black' data-bs-toggle="tooltip" data-bs-title="Eliminar">
+                                        <i class='fa fa-trash-o'></i>
+                                </a>
+
+                                `;
+                    }
+                }
+            ],
+            rowCallback: function (row, data, index) {
+                $(row).on('click', function () {
+                    window.location.href = "/oficios/Derivar/" + data.idOficio;
+                });
+            },
+        });       
+    });
+
+
+
+
+
+   
+</script>

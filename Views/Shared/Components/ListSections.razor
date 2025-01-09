@@ -1,0 +1,120 @@
+﻿@page "/ListSections"
+
+@using SUAP_PortalOficios.Data
+@using SUAP_PortalOficios.Models
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Identity
+@using System.Net
+@using System.Text.Json
+@using System.Text
+@using SUAP_PortalOficios.Views.Shared.Components.Services
+
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAntiforgery Antiforgery
+@inject HttpClient Http
+@inject UserManager<MyUser> UserManager
+@inject SignInManager<MyUser> SignInManager
+@inject HttpClientService HttpClientService
+
+<h3>Areas</h3>
+<div class="overflow-auto" style="max-height:@MaxHeight">
+    @if (AreaXOficio != null && AreaXOficio.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Área</th>
+                    <th>Estado</th>
+                    <th>Fecha Fin</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var area in AreaXOficio)
+                {
+                    var rowClass = area.EstadoId switch
+                    {
+                        7 => "bg-green",
+                        6 => "bg-green",
+                        5 => "bg-yellow",                       
+                        4 => "",
+                        _ => "bg-red"
+                    };
+                    <tr class="@rowClass">
+                        <td>@(area.Sections?.Name ?? "Sin nombre")</td>
+                        <td>@(area.EstadoId > 5 ? "Finalizado" : (area.Estado?.EstadoNombre ?? "Sin Estado") )</td>
+                        <td>@(area.FechaFin?.ToString("dd/MM/yy HH:mm") ?? "Sin Finalizar")</td>
+                        <td>
+                            @if (area.EstadoId == 5 && Devolucion)
+                            {
+                                <button @onclick="() => devolver(area)" class="btn btn-outline-danger btn-sm">Devolver</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No se ha asignado ninguna area a este oficio.</p>
+    }
+</div>
+@code {
+    [Parameter] public List<Oficios_x_Area>? AreaXOficio { get; set; }
+    [Parameter] public bool Devolucion { get; set; } = true;
+    [Parameter] public string MaxHeight { get; set; } = "10rem";
+
+    private async Task devolver(Oficios_x_Area area)
+    {
+        try
+        {
+            using (var client = HttpClientService.CreateConfiguredHttpClient())
+            {            
+                var options = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Cambiar según sea necesario
+                    };
+                string jsonContent = JsonSerializer.Serialize(area, options);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("/Oficios/Devolucion", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                    using (var document = JsonDocument.Parse(jsonResponse))
+                    {
+                        var registroElement = document.RootElement.GetProperty("registro");
+                        var result = JsonSerializer.Deserialize<Oficios_x_Area>(registroElement.GetRawText(), new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
+
+                        if (result != null)
+                        {
+                            var index = AreaXOficio.FindIndex(a =>
+                            a.OficiosId == result.OficiosId &&
+                            a.SectionId == result.SectionId &&
+                            a.ScopeId == result.ScopeId);
+
+                            if (index != -1)
+                            {
+                                var newEstado = new Estado { IdEstado= 8, EstadoNombre="Devuelto" };
+                                result.Estado = newEstado;
+                                AreaXOficio[index] = result; 
+                            }
+                        }
+                    }
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Excepción al enviar la devolución: {ex.Message}");
+        }
+    }
+
+}

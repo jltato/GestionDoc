@@ -1,0 +1,113 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Crear Usuario";
+}
+
+<div class="container">
+<div class="row">
+    <div class="col-md-4">
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <h1>@ViewData["Title"]</h1>
+            <h2>Crear nueva cuenta.</h2>
+            <hr />
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="Nombre" />
+                <label asp-for="Input.UserName">Nombre de Usuario</label>
+                <span asp-validation-for="Input.UserName" class="text-danger"></span>
+                    @if (!string.IsNullOrEmpty(Model.ExistingUserId))
+                    {
+                        <div class="">
+                            <button class="btn btn-sm btn-danger" onclick="location.href='@Url.Page("/Account/Details", new { id = Model.ExistingUserId })'">
+                                Ver el usuario bloqueado
+                            </button>
+                        </div>
+                    }
+            </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Nombre" class="form-control" autocomplete="Nombre" aria-required="true" placeholder="Nombre y Apellido" />
+                    <label asp-for="Input.Nombre">Nombre y Apellido</label>
+                    <span asp-validation-for="Input.Nombre" class="text-danger"></span>
+                </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.Password">Contraseña</label>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.ConfirmPassword">Confirmar Contraseña</label>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Crear</button>
+        </form>
+           
+    </div>
+    <div class="col-md-8 col-md-offset-2 mt-2 mt-xl-0 " >
+          
+
+            @if (Model.Usuarios == null || Model.Usuarios.Count == 0)
+            {
+                <div>
+                        <h3> No hay Usuarios Disponibles </h3>
+               </div>
+            }
+            else
+            {
+                 <table class="table table-hover table-sm" id="tabla1">
+                    <thead>
+                        <tr>
+                            <td> Nombre y Apellido </td>
+                            <td> Nombre de Usuario </td>
+                            <td class="text-center"> Bloqueado </td>
+                        </tr>
+                    </thead>
+                        @foreach (var item in Model.Usuarios)
+                        {
+                                <tr onclick="window.location.href='@Url.Page("/Account/Details", new { area = "Identity", id = item.UserId })'">
+                                    <td>
+                                        <strong> @item.Nombre </strong>
+                                    </td>
+                                    <td>
+                                        <strong> @item.UserName </strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" @(item.IsLockedOut ? "checked" : "") disabled="true" />
+                                    </td>
+                                </tr>
+                        }
+                 </table>
+            }
+       
+    </div>
+</div>
+</div>
+
+
+
+<style>
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+</style>
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<script>
+    var table = new DataTable('#tabla1', {
+        language: {
+            url: '../../lib/DataTables/Language.json',
+        },
+        scrollY: 300,
+        deferRender: true,
+       // scroller: true
+       
+        
+    });
+</script>
+
+

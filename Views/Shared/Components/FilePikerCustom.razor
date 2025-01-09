@@ -1,0 +1,121 @@
+﻿@page "/FilePikerCustom"
+@using System.IO
+@using Blazorise.Extensions
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.Net.Http.Headers
+@using System.Diagnostics
+@using System.Net.Http.Headers
+@using System.Net
+@using System.Security.Claims
+@using SUAP_PortalOficios.Views.Shared.Components.Services
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject IHttpContextAccessor HttpContextAccessor 
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAntiforgery Antiforgery
+@inject HttpClientService HttpClientService
+
+
+<h3 class=" fs-3 mb-2">Subir Archivos</h3>
+
+<Field style="">
+    <!-- FilePicker con el label oculto pero funcionalidad de dropzone y subida -->
+    <FilePicker @ref="filePickerCustom"
+                Multiple             
+                Upload="OnFileUploadBuffered"
+                ShowMode="@ShowMode"
+                Directory="@directory"
+                DisableProgressReport="@disableProgressReport"
+                Filter=".pdf">
+    </FilePicker>  
+</Field>
+
+
+<style>
+    .list-group.b-file-picker-files{
+        max-height:38vh;
+        overflow:auto;        
+    }
+</style>
+
+@code {
+
+    [Parameter]
+    public FilePickerShowMode ShowMode { get; set; } = FilePickerShowMode.List; // Valor por defecto
+    [Parameter]
+    public int indice { get; set; }
+
+    private bool reset;
+    private FilePicker filePickerCustom { get; set; }
+
+    private bool disableProgressReport = false;
+    private bool directory = false;
+
+    private string currentPlaceholder = "Seleccione un Archivo PDF";
+
+
+    // Manejo de la subida de archivos
+    async Task OnFileUploadBuffered(FileUploadEventArgs e)
+    {
+        if (e.File.Type == "aplication/pdf" || e.File.Type == "application/pdf")
+        {
+            e.File.Status = FileEntryStatus.Uploading;
+            try
+            {
+                using (MemoryStream result = new MemoryStream())
+                {
+                    await e.File.OpenReadStream(long.MaxValue).CopyToAsync(result);
+                    var file = result.ToArray();
+
+                    var fileContent = new ByteArrayContent(file);
+
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(e.File.Type);
+                    // Agrega el archivo al contenido con nombre "file"
+                    var content = new MultipartFormDataContent();
+                    content.Add(fileContent, "file", e.File.Name);
+
+                    using (var client = HttpClientService.CreateConfiguredHttpClient())
+                    {
+                        var respuesta = await client.PostAsync("api/Document/Create/" + indice, content);
+
+                        if (respuesta.IsSuccessStatusCode)
+                        {
+                            e.File.Status = FileEntryStatus.Uploaded;
+                            Console.WriteLine("ok " + respuesta);
+                        }
+                        else
+                        {
+                            e.File.Status = FileEntryStatus.Error;
+                            Console.WriteLine("Ha ocurrido un error");
+                        }
+                    }
+
+                }
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine(exc.Message);
+            }
+            finally
+            {
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            e.File.Status = FileEntryStatus.Error;
+            StateHasChanged();
+        }
+    }
+
+    public async Task ResetFilePicker()
+    {
+        await filePickerCustom.Clear();
+        StateHasChanged();
+    }
+
+   
+}
+
+

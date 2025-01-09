@@ -1,0 +1,41 @@
+﻿@model SUAP_PortalOficios.Models.Oficios
+@using SUAP_PortalOficios.Views.Shared.Components
+@{
+    ViewData["Title"] = "Derivar";
+}
+<div class="wrapper h-100">
+    <div class="pane center pe-2" style="">
+      
+        <div class="row">       
+                <component type="@typeof(Derivacion)" 
+                    param-oficio="@ViewBag.Oficio"
+                    param-InternoEncontrado="@ViewBag.Interno"
+                    param-resultadoActual="@ViewBag.Sections"
+                    param-returnUrl="@ViewBag.RefererUrl"
+                    render-mode="Server"
+                /> 
+        </div>
+    <div>
+            <a href="@ViewBag.RefererUrl">Volver al Listado</a>
+    </div>
+        <div class="mt-2">
+            <span class="text-muted">Ultima Modificacion: @ViewBag.Oficio.MyUser.Nombre</span>
+        </div>
+    </div>
+    <div class="pane wright ps-4 border-start" Style="width:55% !important;">
+        <component type="@typeof(PdfViewer)"
+            param-oficioId="@ViewBag.Oficio.IdOficio"
+            render-mode="Server"
+            param-DeletePermission="@ViewBag.DeletePermission" 
+        />
+    </div>
+
+</div>
+
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+

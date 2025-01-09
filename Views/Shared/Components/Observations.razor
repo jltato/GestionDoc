@@ -1,0 +1,178 @@
+﻿@page "/observations"
+
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@using SUAP_PortalOficios.Data
+@using SUAP_PortalOficios.Hubs
+@using SUAP_PortalOficios.Models
+@using SUAP_PortalOficios.Views.Shared.Components.Services
+@using System.Text
+@using System.Text.Json
+
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject HttpClientService HttpClientService
+@inject UserManager<MyUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IAntiforgery _antiforgery
+
+<Form @onsubmit="PostObservation" autocomplete="off" Class="form-control bg-light">
+    <div>
+        <h4 class=" text-decoration-underline">Observaciones</h4>
+    </div>
+    <div>
+        <div id="observationsDiv" class="form-control overflow-auto " style=" max-height:9rem; min-height:4rem;">
+            @((MarkupString)ObservationsText)
+        </div>
+    </div>
+    <div Class="mt-2 d-sm-flex gap-2">
+        <InputText class="form-control" rows="1" id="observationTextArea"  @bind-Value="NewObserbation" placeholder="Ingrese un mensaje..."></InputText>
+        <Button Type="ButtonType.Submit" Class="align-items-center btn btn-primary d-flex gap-2"> Enviar <i class="fa fa-arrow-circle-o-right"></i></Button>
+    </div>
+</Form>
+
+
+@code {
+    [Parameter]
+    public int OficioId { get; set; }
+    private List<Observation> observations = new List<Observation>();
+    private string ObservationsText = string.Empty;
+    private string NewObserbation = string.Empty;
+    private DotNetObjectReference<Observations>? objRef;
+
+    protected override async Task OnInitializedAsync()
+    {       
+        await GetObservations();
+    }
+    protected override async void OnParametersSet()
+    {
+        await GetObservations();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        objRef = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("registerObservationsInstance", objRef);
+        await JS.InvokeVoidAsync("scrollToBottom", "observationsDiv");
+    }
+
+    [JSInvokable("GetObservations")]
+    public async Task GetObservations()
+    {
+        try
+        {
+            using (var client = HttpClientService.CreateConfiguredHttpClient())
+            {
+                var response = await client.GetAsync($"Oficios/Observaciones/{OficioId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var lista = await response.Content.ReadFromJsonAsync<List<Observation>>();
+
+                    if (lista != null)
+                    {
+                        observations = lista;
+                        ObservationsText = string.Join("<br />",
+                            observations.Select(obs =>
+                                $"<spam class='text-danger'><u>{obs.user.Nombre}</u> ({obs.Timestamp:dd/MM/yy hh:mm}hs.): <spam class='fw-bold'>{obs.Content}</spam></spam>"
+                            )
+                        );
+                        
+                    }
+                }
+                else
+                {
+                    ObservationsText = "No hay Observaciones...";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ObservationsText = $"Ocurrió un error: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    private async Task PostObservation()
+    {
+        if (!string.IsNullOrWhiteSpace(NewObserbation))
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = await UserManager.GetUserAsync(authState.User);
+
+            Observation observation = new Observation()
+                {
+                    Content = NewObserbation,
+                    IdOficio = OficioId,
+                    UserId = user.Id
+                };
+
+            using (var client = HttpClientService.CreateConfiguredHttpClient())
+            {
+                var jsonContent = JsonSerializer.Serialize(observation);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+               
+
+                var response = await client.PostAsync("Oficios/PostObservaciones", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    NewObserbation = "";
+                    await JS.InvokeVoidAsync("scrollToBottom", "observationsDiv");
+                }
+            }
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Primero debe ingresar una observación");
+        }
+    }
+
+    // Implementación del método Dispose para eliminar la suscripción
+    public async void Dispose()
+    {
+        // Llamada a JavaScript para eliminar el evento "ReceiveMessage" cuando se destruye el componente
+        await JS.InvokeVoidAsync("removeReceiveMessageHandler");
+    }
+}
+
+<script>
+    // Función para escrolear al ultimo mensaje
+    window.scrollToBottom = (elementId) => {
+        var element = document.getElementById(elementId);
+        if (element) {
+            element.scrollTop = element.scrollHeight;
+        }
+    };
+
+        // Función para registrar el objeto Blazor
+    window.registerObservationsInstance = function (observationsInstance) {
+        // Limpiar cualquier suscripción existente para evitar duplicados
+        if (window.signalRConnection) {
+            window.signalRConnection.off("ReceiveMessage");
+        }
+        // Asignar la instancia específica para Observations
+        window.observationsInstance = observationsInstance;
+
+        // Volver a registrar el evento solo para Observations
+        window.signalRConnection.on("ReceiveMessage", () => {
+            if (window.observationsInstance) {
+                window.observationsInstance.invokeMethodAsync("GetObservations")
+                    .then(() => console.log("GetObservations invocado en Observations"))
+                    .catch(err => console.error("Error al invocar GetObservations:", err));
+            }
+        });
+    };
+    
+        // Función para quitar el manejador de eventos "ReceiveMessage" al finalizar
+    window.removeReceiveMessageHandler = function () {
+        if (window.signalRConnection) {
+            window.signalRConnection.off("ReceiveMessage");
+        }
+    }
+
+</script>
+

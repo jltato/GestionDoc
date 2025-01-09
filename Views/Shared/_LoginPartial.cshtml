@@ -1,0 +1,30 @@
+﻿﻿@using Microsoft.AspNetCore.Identity
+@using SUAP_PortalOficios.Data
+
+@inject SignInManager<MyUser> SignInManager
+@inject UserManager<MyUser> UserManager
+@{
+    var user = await UserManager.GetUserAsync(User);
+    var nombre = user?.Nombre;
+}
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })" method="post" id="logoutForm" class="navbar-right">
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a asp-area="Identity" asp-page="/Account/Manage/ChangePassword" title="Manage" class="btn btn-link navbar-btn navbar-link">HOLA @nombre!</a>
+            </li>
+            <li>
+                <button type="submit" class="btn btn-link navbar-btn navbar-link">Cerrar Sesión</button>
+            </li>
+        </ul>
+    </form>
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right gap-3">
+        
+        <li><a asp-area="Identity" asp-page="/Account/Login">Iniciar Sesión</a></li>
+    </ul>
+}

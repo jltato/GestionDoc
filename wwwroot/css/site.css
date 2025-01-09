@@ -1,0 +1,172 @@
+html {
+    font-size: 12px; 
+}
+
+@media (min-width: 1200px) {
+    html {
+        
+        font-size: 0.75rem; 
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    html {
+      
+        font-size: 0.67rem; 
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    html {
+        font-size: 0.6255rem;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    html {
+        font-size: 0.56rem;
+    }
+}
+
+@media (max-width: 575px) {
+    html {
+        font-size: 0.45rem; 
+    }
+}
+
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html, body {
+    min-height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* El contenedor principal que incluye contenido y footer */
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ocupa al menos la altura de la ventana */
+}
+
+/* El área principal del contenido ocupa el espacio disponible */
+.main {
+    flex-grow: 1;
+    padding: 20px;
+}
+
+/* Estiliza el footer */
+footer {
+    padding: 8px 0;
+    width: 100%;
+}
+
+@media(min-width: 577px) {
+
+    .wrapper {
+        display: table;
+        table-layout: fixed;
+        width: 100%;
+        height: 70%;
+    }
+
+    .pane {
+        display: table-cell;
+    }
+
+    .left.pane {
+        width: 13vw;
+    }
+
+    .wright.pane {
+        width: 55%;
+    }
+    
+    .wright.pane.details{
+        width:30%;
+    }
+}
+/* Media Query para pantallas pequeñas */
+@media (max-width: 576px) {
+    .wrapper {
+        display: block; /* Cambiar de diseño tipo tabla a bloques */
+    }
+
+    .pane {
+        display: block; /* Cada panel ocupa toda la anchura */
+        width: 100%; /* Ajustar ancho completo */
+    }
+
+    .left.pane {
+        margin-bottom: 1rem; /* Espacio entre los paneles */
+    }
+    .wright.pane {
+        display:block;
+        width: 100%;
+        height: 500px;
+    }
+
+    .wright.pane.details {
+        display: block;
+        width: 100%;
+    }
+
+}
+
+.bg-yellow {
+    background-color: #fff9c4; /* Amarillo pastel */
+}
+
+.bg-green {
+    background-color: #c8e6c9; /* Verde pastel */
+}
+
+.bg-red {
+    background-color: #ffcdd2; /* Rojo pastel */
+}
+
+
+/*seleccionar y deseleccionar una fila*/
+
+.seleccionada {
+    background-color: #c1c1c1 !important;
+}
+
+/*Alertas Personalizadas */
+
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.custom-modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 90%;
+}
+
+#alertOkButton, #confirmYesButton {
+    background-color: #007bff;
+    color: white;
+}
+
+#confirmNoButton {
+    background-color: #dc3545;
+    color: white;
+}

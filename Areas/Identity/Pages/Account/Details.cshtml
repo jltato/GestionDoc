@@ -1,0 +1,151 @@
+﻿@page
+@model SUAP_PortalOficios.Areas.Identity.Pages.Account.DetailsModel
+@{
+    ViewData["Title"] = "Detalle Usuario";
+    var currentId = Request.Query["id"];
+}
+
+<div class="container">
+<div class="d-flex justify-content-between">
+    <h1>@ViewData["Title"]</h1>
+    <a href="/Identity/Account/Register" style="text-decoration: none;">
+        <div class="d-flex align-items-center text-black">
+            <i class="fa fa-chevron-circle-left fa-2x mx-2" aria-hidden="true"></i>
+            <span class="align-self-center fw-bold">Volver al Listado</span>
+        </div>
+    </a>
+</div>
+<div class="row">
+    <div class="col-md-4 d-flex flex-column">
+        <section>            
+              <h2 class="text-danger">@Model.UserName</h2>
+           <hr />
+           <form id="rolForm" asp-route-returnurl="@Model.ReturnUrl" method="post" asp-page-handler="Form3" asp-route-id="@Model.UserId" >
+                <div class="form-floating mb-3">
+                    <select asp-for="Rol.SelectedRolId" class="form-control fw-bolder" aria-required="true" onchange="$('#rolForm').submit()">                       
+                        @foreach (var rol in Model.Roles)
+                        {
+                            <option value="@rol.Id" selected=@(Model.UserRole == rol.Id? "selected" : null)> @rol.NormalizedName </option>
+                        }                       
+                    </select>
+                    <label asp-for="Rol.SelectedRolId">Rol</label>
+                    <span asp-validation-for="Rol.SelectedRolId" class="text-danger"></span>
+                </div>
+            </form>
+           
+        </section>
+        <div class="flex-grow-1 align-content-end">
+                <form id="deleteUserForm" method="post" asp-page-handler="DeleteUser">
+                    <input type="hidden" name="userId" value="@Model.UserId" />
+                    @if (Model.IsLocked)
+                    {
+                        <button type="submit" onclick="return confirmActive()" class="w-100 btn btn-lg btn-success">Activar Usuario</button>
+                    }
+                    else
+                    {
+                        <button type="submit" onclick="return confirmDelete()" class="w-100 btn btn-lg btn-danger">Bloquear Usuario</button>
+                    }
+                </form>
+        </div>
+    </div>
+    <div class="col-md-8 border-start mt-2 mt-md-0">
+        <div class="d-md-flex justify-content-between">
+            <h4 >Alcance.</h4>
+            <a href="@Url.Page("/Account/Blanqueo", new { id = currentId })" style="">Blanquear Contraseña</a>
+        </div>   
+      <hr />
+      <div class="d-flex">
+            <div class="align-self-end col-md-4 px-3 ">
+                <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" asp-page-handler="Form1" asp-route-id="@Model.UserId">
+                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                    <div class="form-floating mb-3">
+                        <select asp-for="Input.SelectedSection" class="form-control" aria-required="true">
+                            <option value="" selected="selected">Elija una Sección</option>
+                            @foreach (var sections in Model.Sections)
+                            {
+                                <option value=@sections.SectionId>@sections.Name</option>
+                            }
+                        </select>
+                        <label asp-for="Input.SelectedSection"></label>
+                        <span asp-validation-for="Input.SelectedSection" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <select asp-for="Input.SelectedScope" class="form-control" aria-required="true">
+                            <option value="" selected="selected">Seleccione un Ámbito</option>
+                            @foreach (var ambito in Model.Scopes)
+                            {
+                                <option value=@ambito.ScopeId>@ambito.ScopeName</option>
+                            }
+                        </select>
+                        <label asp-for="Input.SelectedScope" class="form-label"></label>
+                        <span asp-validation-for="Input.SelectedScope" class="text-danger"></span>
+                    </div>
+                    <div >
+                        <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Agregar Alcance</button>
+                    </div>
+                </form>
+       
+            </div>
+            <div class="col-md-8">
+                <div>
+                    <div>
+                   
+                        @if (Model.Alcance == null || Model.Alcance.Count == 0)
+                        {
+                            <h3>Este usuario no tiene ningun alcance definido</h3>
+                        }
+                        else
+                        {
+                            <div class="overflow-auto" style="max-height:230px">
+                                <table id="tabla1" class="table table-hover table-sm">
+                                    <thead>
+                                        <tr>
+                                            <td>Sección</td>
+                                            <td>Ámbito</td>
+                                            <td> Eliminar</td>
+                                        </tr>
+                                    </thead>
+                                    @foreach (var item in Model.Alcance)
+                                    {
+                                        <tr>
+                                            <td>@item.SectionName</td>
+                                            <td>@item.ScopeName</td>
+                                            <td class="">
+                                                <form method="post" asp-page-handler="DeleteRole">
+                                                    <!-- Campos ocultos para pasar los IDs -->
+                                                    <input type="hidden" name="userId" value="@item.UserId" />
+                                                    <input type="hidden" name="scopeId" value="@item.ScopeId" />
+                                                    <input type="hidden" name="sectionId" value="@item.SectionId" />
+                                                    <!-- Botón de eliminar -->
+                                                    <button class="ms-4" style="background:none; border:none; padding:0">
+                                                        <i type="submit" class="fa fa-trash" aria-hidden="true"></i>
+                                                    </button>
+
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        }
+                    </div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+}
+<script type="text/javascript">
+    function confirmDelete() {
+        return confirm("¿Está seguro de que quiere borrar este Usuario?");
+    }
+    function confirmActive() {
+        return confirm("¿Está seguro de que quiere Activar este Usuario?")
+    }
+</script>
+
